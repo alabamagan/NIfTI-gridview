@@ -1,0 +1,93 @@
+import SimpleITK as sitk
+import os
+import re
+
+class reader(object):
+    """
+    This is the main reader class for this package. Uses `SimpleITK` to read the images.
+
+    Args:
+        rootdir (str):
+            Directory to read the images from designated paths.
+        recurisve (bool, Optional):
+            Flag to read nifti files recursively. Default to False.
+        fname_filter (dict, Optional):
+            Dictionary in formati of {'[regex_globber]': [list of ids], 'regex_matcher': None}. For
+            regex globbers, the regex will glob ids from filenames and include only ids that are present
+            in the `[list of ids]` as strings. If the value is `None`, the regex will be treated as a
+            matcher and filter away all the files with names that don't match.
+
+    """
+    def __init__(self, rootdir, recursive=False, fname_filters=None, dtype='float', **kwargs):
+        # super(reader, self).__init__()
+
+        self.rootdir = rootdir
+        self.recursive = recursive
+        self.fname_filter = fname_filters
+        self.dtype = dtype
+
+        self._files = {}
+        self._images = {}
+
+        self._parse_rootdir()
+
+    def _parse_rootdir(self):
+        assert os.path.isdir(self.rootdir), "Cannot open root dir from {}!".format(self.rootdir)
+
+        # Read files
+        if self.recursive:
+            for root, dirs, files in os.walk(self.rootdir):
+                if len(files) > 0:
+                    for f in files:
+                        if f.endswith('.nii') or f.endswith('.nii.gz'):
+                            self._files[f] = os.path.join(root, f)
+                else:
+                    pass
+        else:
+            for f in os.listdir(self.rootdir):
+                if f.endswith('.nii') or f.endswith('.nii.gz'):
+                    self._files[f] = os.path.join(self.rootdir, f)
+
+        # Confirm files are loaded
+        assert len(self._files) != 0, "No files are founded!"
+
+        # Filter files, filter should be in format {'regex_globber': [list of ids], 'regex_wildcards': None}
+        if not self.fname_filter is None:
+            assert isinstance(self.fname_filter, dict), "Incorrect fnmame_filter format: {}".format(type(
+                self.fname_filter))
+            for regex in self.fname_filter:
+                keys_to_pop = []
+                if self.fname_filter[regex] is None:
+                    for f in self._files:
+                        if re.match(regex, f) is None:
+                            keys_to_pop.append(f)
+                elif isinstance(self.fname_filter[regex], list):
+                    for f in self._files:
+                        mo = re.search(regex, f)
+                        if not mo is None:
+                            if not mo.group(0) in self.fname_filter[regex]:
+                                keys_to_pop.append(f)
+
+                # remove filtered files
+                for keys in keys_to_pop:
+                    self._files.pop(keys)
+
+    def _read_files(self):
+        for i, f in enumerate(self._files):
+            self._images[f] = sitk.GetArrayFromImage(sitk.ReadImage(self._files[f])).astype(self.dtype)
+
+    def _read_file(self, i):
+        key = list(self._files.keys())[i]
+        self._images[key] = sitk.GetArrayFromImage(sitk.ReadImage(self._files[key])).astype(self.dtype)
+
+    def __getitem__(self, item):
+        if not item in self._images:
+            try:
+                self._images[item] = sitk.GetArrayFromImage(sitk.ReadImage(self._files[item]))
+            except:
+                print("Cannot read item with key: {}. Have you called _read_files()?".format(item))
+                return 0
+        return self._images[item]
+
+    def __len__(self):
+        return len(self._files)
