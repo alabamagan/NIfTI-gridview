@@ -15,4 +15,4 @@ software aims to provide an easy and GUI way to do so.
 
 ## Preview
 
-![Demo_1](Docs/Demo_1.jpg)
+![Demo_1](./Docs/Img/Demo_1.jpg)
