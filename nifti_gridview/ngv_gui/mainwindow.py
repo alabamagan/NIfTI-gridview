@@ -8,6 +8,7 @@ from visualization import draw_grid_wrapper
 
 import numpy as np
 import cv2
+import logging as lg
 
 class ngv_mainwindow(QMainWindow, QWidget):
     def __init__(self,parent=None):
@@ -25,6 +26,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self.statusBar().addPermanentWidget(self._progress_bar)
 
         self._image_cache = {}
+
+        #TODO: Logger
 
         # self.ui.files_listWidget.additem
         # Manual bar
@@ -63,8 +66,12 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self.connect(self.ui.checkBox_autonrow, SIGNAL('stateChanged(int)'), self, SLOT('_toggle_checkboxes()'))
         self.connect(self.ui.checkBox_userange, SIGNAL('stateChanged(int)'), self, SLOT('_toggle_checkboxes()'))
         self.connect(self.ui.checkBox_autonrow, SIGNAL('stateChanged(int)'), self, SLOT('_update_image_data()'))
+        self.connect(self.ui.checkBox_userange, SIGNAL('stateChanged(int)'), self, SLOT('_update_image_data()'))
         self.connect(self.ui.spinBox_nrow, SIGNAL('valueChanged(int)'), self, SLOT('_update_image_data()'))
         self.connect(self.ui.spinBox_offset,SIGNAL('valueChanged(int)'), self, SLOT('_update_image_data()'))
+        self.connect(self.ui.spinBox_drawrange_upper,SIGNAL('valueChanged(int)'), self, SLOT('_update_image_data()'))
+        self.connect(self.ui.spinBox_drawrange_lower,SIGNAL('valueChanged(int)'), self, SLOT('_update_image_data()'))
+        self.connect(self.ui.spinBox_padding,SIGNAL('valueChanged(int)'), self, SLOT('_update_image_data()'))
 
 
     def _toggle_checkboxes(self):
@@ -110,6 +117,25 @@ class ngv_mainwindow(QMainWindow, QWidget):
         active_file = self.ui.files_listWidget.selectedItems()[0].text()
         target_im = self.io_wrapper[active_file]
 
+        # Handle display range
+        if  self.ui.checkBox_userange.isChecked():
+            # Range check
+            display_lrange = self.ui.spinBox_drawrange_lower.value()
+            display_urange = self.ui.spinBox_drawrange_upper.value()
+            self.ui.spinBox_drawrange_lower.setMaximum(display_urange - 2)
+            self.ui.spinBox_drawrange_upper.setMinimum(display_lrange + 2)
+            self.ui.spinBox_drawrange_upper.setMaximum(target_im.shape[0] - 1)
+            target_im = target_im[display_lrange:display_urange]
+        else:
+            # Resume original range if not checked
+            self.ui.spinBox_drawrange_lower.blockSignals(True)
+            self.ui.spinBox_drawrange_upper.blockSignals(True)
+            self.ui.spinBox_drawrange_lower.setValue(0)
+            self.ui.spinBox_drawrange_upper.setValue(target_im.shape[0] - 1)
+            self.ui.spinBox_drawrange_lower.blockSignals(False)
+            self.ui.spinBox_drawrange_upper.blockSignals(False)
+
+
         # calculate nrow if auto checked
         if self.ui.checkBox_autonrow.isChecked():
             nrow = int(np.sqrt(target_im.shape[0]))
@@ -119,7 +145,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
         config = {
             'target_im': target_im,
             'nrow': nrow,
-            'offset': self.ui.spinBox_offset.value()
+            'offset': self.ui.spinBox_offset.value(),
+            'margins': self.ui.spinBox_padding.value()
         }
         self.draw_worker.set_config(config)
         self.draw_worker.run()
@@ -136,7 +163,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
     def resizeEvent(self, *args, **kwargs):
         """Inherit and change behavior for resizing"""
         super(ngv_mainwindow, self).resizeEvent(*args, **kwargs)
-        if self.ui.image_label.pixmap():
+        if 'current' in self._image_cache:
             pixmap = self._image_cache['current']
             self.ui.image_label.setPixmap(pixmap.scaledToHeight(self.ui.image_label.height()))
 

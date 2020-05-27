@@ -116,7 +116,7 @@
                  <bool>false</bool>
                 </property>
                 <property name="minimum">
-                 <number>1</number>
+                 <number>2</number>
                 </property>
                 <property name="maximum">
                  <number>999</number>
@@ -148,7 +148,7 @@
                </widget>
               </item>
               <item row="2" column="1">
-               <widget class="QSpinBox" name="spinBox_offset_2">
+               <widget class="QSpinBox" name="spinBox_padding">
                 <property name="value">
                  <number>1</number>
                 </property>
@@ -190,8 +190,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>147</width>
-             <height>46</height>
+             <width>197</width>
+             <height>257</height>
             </rect>
            </property>
            <attribute name="label">
@@ -300,11 +300,17 @@
    </property>
   </action>
   <action name="actionOpen_Segmentation_Folder">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Open Segmentation Folder</string>
    </property>
   </action>
   <action name="actionSave_Configuration">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Save Configuration</string>
    </property>

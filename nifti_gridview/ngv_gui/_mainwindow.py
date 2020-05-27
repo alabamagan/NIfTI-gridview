@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Mon May 11 19:21:36 2020
+# Created: Wed May 27 21:07:52 2020
 #      by: pyside2-uic 2.0.0 running on PySide2 5.6.0~a1
 #
 # WARNING! All changes made in this file will be lost!
@@ -65,7 +65,7 @@ class Ui_ngv_mainwindow(object):
         self.gridLayout.addWidget(self.checkBox_userange, 4, 0, 1, 1)
         self.spinBox_drawrange_upper = QtWidgets.QSpinBox(self.page_3)
         self.spinBox_drawrange_upper.setEnabled(False)
-        self.spinBox_drawrange_upper.setMinimum(1)
+        self.spinBox_drawrange_upper.setMinimum(2)
         self.spinBox_drawrange_upper.setMaximum(999)
         self.spinBox_drawrange_upper.setObjectName("spinBox_drawrange_upper")
         self.gridLayout.addWidget(self.spinBox_drawrange_upper, 3, 2, 1, 1)
@@ -81,10 +81,10 @@ class Ui_ngv_mainwindow(object):
         self.label = QtWidgets.QLabel(self.page_3)
         self.label.setObjectName("label")
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
-        self.spinBox_offset_2 = QtWidgets.QSpinBox(self.page_3)
-        self.spinBox_offset_2.setProperty("value", 1)
-        self.spinBox_offset_2.setObjectName("spinBox_offset_2")
-        self.gridLayout.addWidget(self.spinBox_offset_2, 2, 1, 1, 1)
+        self.spinBox_padding = QtWidgets.QSpinBox(self.page_3)
+        self.spinBox_padding.setProperty("value", 1)
+        self.spinBox_padding.setObjectName("spinBox_padding")
+        self.gridLayout.addWidget(self.spinBox_padding, 2, 1, 1, 1)
         self.spinBox_drawrange_lower = QtWidgets.QSpinBox(self.page_3)
         self.spinBox_drawrange_lower.setEnabled(False)
         self.spinBox_drawrange_lower.setObjectName("spinBox_drawrange_lower")
@@ -97,7 +97,7 @@ class Ui_ngv_mainwindow(object):
         self.verticalLayout_3.addItem(spacerItem)
         self.toolBox.addItem(self.page_3, "")
         self.page_4 = QtWidgets.QWidget()
-        self.page_4.setGeometry(QtCore.QRect(0, 0, 147, 46))
+        self.page_4.setGeometry(QtCore.QRect(0, 0, 197, 257))
         self.page_4.setObjectName("page_4")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.page_4)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
@@ -143,8 +143,10 @@ class Ui_ngv_mainwindow(object):
         self.actionOpen_Folder = QtWidgets.QAction(ngv_mainwindow)
         self.actionOpen_Folder.setObjectName("actionOpen_Folder")
         self.actionOpen_Segmentation_Folder = QtWidgets.QAction(ngv_mainwindow)
+        self.actionOpen_Segmentation_Folder.setEnabled(False)
         self.actionOpen_Segmentation_Folder.setObjectName("actionOpen_Segmentation_Folder")
         self.actionSave_Configuration = QtWidgets.QAction(ngv_mainwindow)
+        self.actionSave_Configuration.setEnabled(False)
         self.actionSave_Configuration.setObjectName("actionSave_Configuration")
         self.actionExport_Images = QtWidgets.QAction(ngv_mainwindow)
         self.actionExport_Images.setObjectName("actionExport_Images")
