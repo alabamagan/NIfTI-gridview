@@ -125,7 +125,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
             self.ui.spinBox_drawrange_lower.setMaximum(display_urange - 2)
             self.ui.spinBox_drawrange_upper.setMinimum(display_lrange + 2)
             self.ui.spinBox_drawrange_upper.setMaximum(target_im.shape[0] - 1)
-            target_im = target_im[display_lrange:display_urange]
+            target_im = target_im[display_lrange:display_urange + 1]
         else:
             # Resume original range if not checked
             self.ui.spinBox_drawrange_lower.blockSignals(True)
