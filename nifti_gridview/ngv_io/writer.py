@@ -3,7 +3,7 @@ import os
 import cv2
 
 class writer(object):
-    def __init__(self, data, outdir):
+    def __init__(self, configs_list, draw_worker):
         self.data = data
         self.outdir = outdir
 

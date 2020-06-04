@@ -15,7 +15,7 @@ class ngv_io_reader_wrapper(QThread):
     Attributes:
         _reader (ngv_io.reader):
             Private reader object
-"""
+    """
     update_progress = Signal(int)
     update_view_list = Signal(str)
     error_msg = Signal(str)
@@ -46,3 +46,18 @@ class ngv_io_reader_wrapper(QThread):
             self.read_all_targets()
         except:
             self.error_msg(self.tr("Reader encounters error..."))
+
+class ngv_io_writer_wrapper(QThread):
+    """
+    This class is the worker thread that handles writing images
+    """
+    update_progress = Signal(int)
+    error_msg = Signal(str)
+
+    def __init__(self, parent=None):
+        QThread.__init__(self, parent)
+
+        self._writer = None
+
+    def configure_writer(self, *args, **kwargs):
+        self._writer = writer(*args , **kwargs)
