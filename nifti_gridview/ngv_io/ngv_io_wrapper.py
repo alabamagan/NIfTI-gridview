@@ -18,7 +18,7 @@ class ngv_io_reader_wrapper(QThread):
     """
     update_progress = Signal(int)
     update_view_list = Signal(str)
-    error_msg = Signal(str)
+    display_msg = Signal(str)
 
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
@@ -36,23 +36,31 @@ class ngv_io_reader_wrapper(QThread):
             self._reader._read_file(i)
             self.update_progress.emit((100 * i ) // l)
             self.update_view_list.emit(list(self._reader._files.keys())[i])
+        self.display_msg.emit("Ready.")
 
     def __getitem__(self, item):
         if not self._reader is None:
             return self._reader.__getitem__(item)
 
+    def __iter__(self):
+        N = len(self._reader)
+        for i, (key, im) in enumerate(self._reader):
+            self.update_progress.emit((100 * i) // N)
+            self.display_msg.emit(self.tr("Handling: ") + key)
+            yield key, im
+
     def run(self):
         try:
             self.read_all_targets()
         except:
-            self.error_msg(self.tr("Reader encounters error..."))
+            self.display_msg.emit(self.tr("Reader encounters error..."))
 
 class ngv_io_writer_wrapper(QThread):
     """
     This class is the worker thread that handles writing images
     """
     update_progress = Signal(int)
-    error_msg = Signal(str)
+    display_msg = Signal(str)
 
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
@@ -61,3 +69,10 @@ class ngv_io_writer_wrapper(QThread):
 
     def configure_writer(self, *args, **kwargs):
         self._writer = writer(*args , **kwargs)
+
+    def run(self):
+        try:
+            self._writer.write()
+        except Exception as e:
+            print("Error: {}".format(e))
+            self.display_msg.emit(self.tr("Writer encounters error: {}".format(e)))

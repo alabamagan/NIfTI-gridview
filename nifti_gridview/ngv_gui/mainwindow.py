@@ -1,9 +1,9 @@
 import sys
-from PySide2.QtWidgets import QMainWindow, QWidget, QProgressBar, QHBoxLayout, QSpacerItem, QFileDialog
+from PySide2.QtWidgets import QMainWindow, QWidget, QProgressBar, QErrorMessage, QFileDialog
 from PySide2.QtCore import SIGNAL, SLOT, Signal, Slot, QStringListModel
 from PySide2.QtGui import QImage, QPixmap
 from ._mainwindow import *
-from ngv_io import ngv_io_reader_wrapper
+from ngv_io import ngv_io_reader_wrapper, ngv_io_writer_wrapper
 from visualization import draw_grid_wrapper
 
 import numpy as np
@@ -45,15 +45,18 @@ class ngv_mainwindow(QMainWindow, QWidget):
         # set up UI layouts
         # self._left_panel = QStackedLayout()
         self.connect(self.ui.actionOpen_Folder, SIGNAL('triggered()'), self, SLOT('_action_openfolder()'))
+        self.connect(self.ui.actionExport_Images, SIGNAL('triggered()'), self, SLOT('_action_export_images()'))
 
         # self.status=self.statusBar()
 
         # Set up io object
-        self.io_wrapper = ngv_io_reader_wrapper(self)
-        self.connect(self.io_wrapper, SIGNAL('update_progress(int)'), self, SLOT('_update_progress(int)'))
-        self.connect(self.io_wrapper, SIGNAL('error_msg(str)'), self._status_bar, SLOT('showMessage(str)'))
         self.draw_worker = draw_grid_wrapper(self)
-        self.connect(self.draw_worker, SIGNAL('error_msg(str)'), self._status_bar, SLOT('showMessage(str)'))
+        self.io_reader_worker = ngv_io_reader_wrapper(self)
+        self.io_write_worker = ngv_io_writer_wrapper(self)
+        self.connect(self.io_reader_worker, SIGNAL('update_progress(int)'), self, SLOT('_update_progress(int)'))
+        self.connect(self.io_reader_worker, SIGNAL('display_msg(str)'), self._status_bar, SLOT('showMessage(str)'))
+        self.connect(self.io_write_worker, SIGNAL('display_msg(str)'), self._status_bar, SLOT('showMessage(str)'))
+        self.connect(self.draw_worker, SIGNAL('display_msg(str)'), self._status_bar, SLOT('showMessage(str)'))
 
         # Set up drawer
         self.connect(self.ui.files_listWidget, SIGNAL('itemSelectionChanged()'), self, SLOT('_update_image_data()'))
@@ -73,6 +76,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self.connect(self.ui.spinBox_drawrange_lower,SIGNAL('valueChanged(int)'), self, SLOT('_update_image_data()'))
         self.connect(self.ui.spinBox_padding,SIGNAL('valueChanged(int)'), self, SLOT('_update_image_data()'))
 
+        self.connect(self.draw_worker, SIGNAL('finished()'), self, SLOT('_update_displayed_img()'))
 
     def _toggle_checkboxes(self):
         target = self.checkbox_connectionmap[self.sender()]
@@ -95,7 +99,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
         Push file names keys into the list view.
         """
         self.ui.files_listWidget.clear()
-        for key in self.io_wrapper._reader._files.keys():
+        for key in self.io_reader_worker._reader._files.keys():
             self.ui.files_listWidget.addItem(key)
         self.ui.files_listWidget.sortItems()
 
@@ -109,13 +113,13 @@ class ngv_mainwindow(QMainWindow, QWidget):
         reader_root_dir = fd.getExistingDirectory(self, self.tr("Open"),
                                                   '/home/***REMOVED***/Source/Repos/***REMOVED***_Segmentation/***REMOVED***_Segmentation',
                                                   QFileDialog.ShowDirsOnly)
-        self.io_wrapper.configure_reader(reader_root_dir, True)
+        self.io_reader_worker.configure_reader(reader_root_dir, True)
         self._update_file_list_view()
 
     def _update_image_data(self):
         """Triggered when list widget item changed. Load image into cache."""
         active_file = self.ui.files_listWidget.selectedItems()[0].text()
-        target_im = self.io_wrapper[active_file]
+        target_im = self.io_reader_worker[active_file]
 
         # Handle display range
         if  self.ui.checkBox_userange.isChecked():
@@ -149,12 +153,31 @@ class ngv_mainwindow(QMainWindow, QWidget):
             'margins': self.ui.spinBox_padding.value()
         }
         self.draw_worker.set_config(config)
-        self.draw_worker.run()
+        self.draw_worker.start()
+        # self.draw_worker.run()
 
+    def _action_export_images(self):
+        # Error check
+        if self.ui.files_listWidget.count() == 0:
+            mb = QErrorMessage(self)
+            mb.showMessage(self.tr("Please specify source image directories first!"))
+            return
+
+        # There are no config if no images are selected, so we go ahead and activate one.
+        if len(self.ui.files_listWidget.selectedItems()) == 0:
+            self.ui.files_listWidget.setCurrentItem(self.ui.files_listWidget.itemAt(0, 0))
+
+        writer_draw_worker = draw_grid_wrapper(self)
+        writer_draw_worker.set_config(self.draw_worker._config)
+        write_dir = QFileDialog.getExistingDirectory(self, self.tr("Write Image"))
+        self.io_write_worker.configure_writer(self.io_reader_worker, writer_draw_worker, write_dir)
+        self.io_write_worker.start()
+
+
+    def _update_displayed_img(self):
         # convert result to QT
         displayim = self.draw_worker.get_result()
         qImg = self._np_to_QPixmap(displayim)
-        self._image_cache[active_file] = qImg
         self._image_cache['current'] = qImg
 
         # TODO: Cahce this image data somewhere, display and scale on another slot, also triggered by scaling.

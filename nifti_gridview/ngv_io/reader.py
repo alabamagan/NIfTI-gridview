@@ -28,6 +28,7 @@ class reader(object):
 
         self._files = {}
         self._images = {}
+        self._iter = None
 
         self._parse_rootdir()
 
@@ -91,3 +92,7 @@ class reader(object):
 
     def __len__(self):
         return len(self._files)
+
+    def __iter__(self):
+        for key in self._files.keys():
+            yield key, self[key]

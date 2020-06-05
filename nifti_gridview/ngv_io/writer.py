@@ -2,29 +2,35 @@ import numpy as np
 import os
 import cv2
 
+from visualization import draw_grid_wrapper
+
 class writer(object):
-    def __init__(self, configs_list, draw_worker):
-        self.data = data
-        self.outdir = outdir
+    def __init__(self, data_loader, draw_worker, outdir, **kwargs):
+        assert isinstance(draw_worker, draw_grid_wrapper), "Incorrect type.and"
+
+        self._data_loader = data_loader
+        self._outdir = outdir
+        self._draw_worker = draw_worker
+
 
     def write(self):
-        assert isinstance(self.data, dict), "Input data must be in format of dictionary: {'outname': data}"
-
         # check output dir avaialble
-        if not os.path.isdir(self.outdir):
-            os.makedirs(self.outdir, 0o755, exist_ok=True)
+        if not os.path.isdir(self._outdir):
+            os.makedirs(self._outdir, 0o755, exist_ok=True)
 
-        for i, outname in enumerate(self.data):
-            data_arr = self.data[outname]
-            if not isinstance(data_arr, np.ndarray):
-                data_arr = np.array(data_arr)
+        for key, img in self._data_loader:
+            tmp_config = {
+                'target_im': img,
+            }
+            self._draw_worker.update_config(tmp_config)
+            self._draw_worker.run()
 
-            if data_arr.dtype == np.dtype('double') or data_arr.dtype == np.dtype('float'):
-                data_arr = writer._float_im_to_RGB(data_arr)
+            tmp_img = self._draw_worker.get_result()
+            if tmp_img.dtype == np.dtype('double') or tmp_img.dtype == np.dtype('float'):
+                tmp_img = writer._float_im_to_RGB(tmp_img)
 
-            outdir = os.path.join(self.outdir, outname.replace('.nii', '').replace('.gz','') + '.png')
-            cv2.imwrite(outdir, data_arr)
-
+            out_fnmae = os.path.join(self._outdir, key.replace('.nii', '').replace('.gz','') + '.png')
+            cv2.imwrite(out_fnmae, tmp_img)
         pass
 
     @staticmethod

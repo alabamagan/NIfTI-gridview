@@ -13,6 +13,9 @@ class draw_grid_wrapper(QThread):
     def set_config(self, config):
         self._config = config
 
+    def update_config(self, config):
+        self._config.update(config)
+
     def run(self):
         assert not self._config is None
 
