@@ -4,7 +4,7 @@ from PySide2.QtCore import SIGNAL, SLOT, Signal, Slot, QStringListModel
 from PySide2.QtGui import QImage, QPixmap
 from ._mainwindow import *
 from ngv_io import ngv_io_reader_wrapper, ngv_io_writer_wrapper
-from visualization import draw_grid_wrapper
+from visualization import draw_grid_wrapper, colormaps
 
 import numpy as np
 import cv2
@@ -25,7 +25,9 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self._progress_bar.setValue(100)
         self.statusBar().addPermanentWidget(self._progress_bar)
 
+        # TODO: Move cache to a class for memory managements
         self._image_cache = {}
+
 
         #TODO: Logger
 
@@ -63,8 +65,6 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self.checkbox_connectionmap = {self.ui.checkBox_userange: [self.ui.spinBox_drawrange_lower,
                                                                    self.ui.spinBox_drawrange_upper],
                                        self.ui.checkBox_autonrow: [self.ui.spinBox_nrow]}
-
-
         self.ui.checkBox_autonrow.stateChanged.connect(self._toggle_checkboxes)
         self.ui.checkBox_userange.stateChanged.connect(self._toggle_checkboxes)
         self.ui.checkBox_autonrow.stateChanged.connect(self._update_image_data)
@@ -79,6 +79,21 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self.draw_worker.finished.connect(self._update_displayed_img)
         self.draw_worker.display_msg.connect(self._show_message)
         self._show_message(self.tr('Ready.'))
+
+        ######################
+        # Initialize UI
+        ######################
+        w = self.ui.tableWidget_segmentations.width()
+        for i in range(5):
+            self.ui.tableWidget_segmentations.setColumnWidth(i, w / 5)
+
+        self.ui.comboBox_cmap.addItems(list(colormaps.keys()))
+        self.ui.comboBox_cmap.setCurrentText('Default')
+
+        ##################################
+        # Connection after UI initialized
+        ##################################
+        self.ui.comboBox_cmap.currentTextChanged.connect(self._update_image_data)
 
     @Slot(str)
     def _show_message(self, s):
@@ -156,7 +171,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
             'target_im': target_im,
             'nrow': nrow,
             'offset': self.ui.spinBox_offset.value(),
-            'margins': self.ui.spinBox_padding.value()
+            'margins': self.ui.spinBox_padding.value(),
+            'cmap': self.ui.comboBox_cmap.currentText()
         }
         self.draw_worker.set_config(config)
         self.draw_worker.start()
@@ -193,6 +209,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
     def _update_displayed_img(self):
         # convert result to QT
         displayim = self.draw_worker.get_result()
+        if not isinstance(displayim, np.ndarray):
+            displayim = np.array(displayim)
         qImg = self._np_to_QPixmap(displayim)
         self._image_cache['current'] = qImg
 
@@ -202,9 +220,16 @@ class ngv_mainwindow(QMainWindow, QWidget):
     def resizeEvent(self, *args, **kwargs):
         """Inherit and change behavior for resizing"""
         super(ngv_mainwindow, self).resizeEvent(*args, **kwargs)
+
+        # Change displayed image size according to height
         if 'current' in self._image_cache:
             pixmap = self._image_cache['current']
             self.ui.image_label.setPixmap(pixmap.scaledToHeight(self.ui.image_label.height()))
+
+        w = self.ui.tableWidget_segmentations.width()
+        for i in range(5):
+            self.ui.tableWidget_segmentations.setColumnWidth(i, w / 5)
+
 
     @staticmethod
     def _np_to_QPixmap(inim):

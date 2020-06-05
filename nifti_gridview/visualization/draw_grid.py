@@ -3,8 +3,9 @@ from torch import tensor, nn
 import numpy as np
 import cv2
 
-cmap = {
-    'default': None,
+colormaps = {
+    'Default': None,
+    'Parula': cv2.COLORMAP_PARULA,
     'Autumn': cv2.COLORMAP_AUTUMN,
     'Bone': cv2.COLORMAP_BONE,
     'Jet': cv2.COLORMAP_JET,
@@ -18,7 +19,7 @@ cmap = {
     'Hot': cv2.COLORMAP_HOT
 }
 
-def draw_grid(image, crop=None, nrow=None, offset=None, background=0, margins=1, **kwargs):
+def draw_grid(image, crop=None, nrow=None, offset=None, background=0, margins=1, cmap=None, **kwargs):
     """
     This is the wrapper function for make_grid that supports some extra tweaking.
 
@@ -37,6 +38,9 @@ def draw_grid(image, crop=None, nrow=None, offset=None, background=0, margins=1,
             Background pixel value for offset and margins option. Default to 0.
         margins (int, Optional):
             Pass to `make_grid` padding option. Default to 1.
+        cmap (str, Optional):
+            Colormap for image drawing, see dicitonary `cmap` for a list of available colormap. Default
+            to `None`.
         **kwargs:
             Not suppose to have any use.
 
@@ -82,5 +86,9 @@ def draw_grid(image, crop=None, nrow=None, offset=None, background=0, margins=1,
     # return image as RGB with range 0 to 255
     im_grid = make_grid(image, nrow=nrow, padding=margins, normalize=True, pad_value=background)
     im_grid = (im_grid * 255.).permute(1, 2, 0).numpy().astype('uint8').copy()
+
+    if not (cmap is None or cmap == 'Default'):
+        im_grid = cv2.applyColorMap(im_grid[:,:,0], colormaps[cmap])
+
     # im_grid = (im_grid).permute(1, 2, 0).numpy().astype('float').copy()
     return im_grid
