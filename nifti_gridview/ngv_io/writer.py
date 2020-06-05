@@ -11,12 +11,15 @@ class writer(object):
         self._data_loader = data_loader
         self._outdir = outdir
         self._draw_worker = draw_worker
+        self._high_res = kwargs['high_res'] if 'high_res' in kwargs else False
 
 
     def write(self):
         # check output dir avaialble
         if not os.path.isdir(self._outdir):
             os.makedirs(self._outdir, 0o755, exist_ok=True)
+
+        extension = '.png' if self._high_res else '.jpg'
 
         for key, img in self._data_loader:
             tmp_config = {
@@ -29,7 +32,7 @@ class writer(object):
             if tmp_img.dtype == np.dtype('double') or tmp_img.dtype == np.dtype('float'):
                 tmp_img = writer._float_im_to_RGB(tmp_img)
 
-            out_fnmae = os.path.join(self._outdir, key.replace('.nii', '').replace('.gz','') + '.png')
+            out_fnmae = os.path.join(self._outdir, key.replace('.nii', '').replace('.gz','') + extension)
             cv2.imwrite(out_fnmae, tmp_img)
         pass
 

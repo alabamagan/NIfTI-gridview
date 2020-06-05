@@ -9,6 +9,7 @@ from visualization import draw_grid_wrapper
 import numpy as np
 import cv2
 import logging as lg
+import os
 
 class ngv_mainwindow(QMainWindow, QWidget):
     def __init__(self,parent=None):
@@ -22,7 +23,6 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self._progress_bar.setMaximumWidth(200)
         self._progress_bar.setTextVisible(False)
         self._progress_bar.setValue(100)
-        self.statusBar().showMessage('Ready')
         self.statusBar().addPermanentWidget(self._progress_bar)
 
         self._image_cache = {}
@@ -44,39 +44,45 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         # set up UI layouts
         # self._left_panel = QStackedLayout()
-        self.connect(self.ui.actionOpen_Folder, SIGNAL('triggered()'), self, SLOT('_action_openfolder()'))
-        self.connect(self.ui.actionExport_Images, SIGNAL('triggered()'), self, SLOT('_action_export_images()'))
-
-        # self.status=self.statusBar()
+        self.ui.actionOpen_Folder.triggered.connect(self._action_openfolder)
+        self.ui.actionExport_Images.triggered.connect(self._action_export_images)
 
         # Set up io object
         self.draw_worker = draw_grid_wrapper(self)
         self.io_reader_worker = ngv_io_reader_wrapper(self)
         self.io_write_worker = ngv_io_writer_wrapper(self)
-        self.connect(self.io_reader_worker, SIGNAL('update_progress(int)'), self, SLOT('_update_progress(int)'))
-        self.connect(self.io_reader_worker, SIGNAL('display_msg(str)'), self._status_bar, SLOT('showMessage(str)'))
-        self.connect(self.io_write_worker, SIGNAL('display_msg(str)'), self._status_bar, SLOT('showMessage(str)'))
-        self.connect(self.draw_worker, SIGNAL('display_msg(str)'), self._status_bar, SLOT('showMessage(str)'))
+        self.io_reader_worker.update_progress.connect(self._update_progress)
+        self.io_reader_worker.display_msg.connect(self._show_message)
+        self.io_write_worker.display_msg.connect(self._show_message)
+
 
         # Set up drawer
-        self.connect(self.ui.files_listWidget, SIGNAL('itemSelectionChanged()'), self, SLOT('_update_image_data()'))
-
+        self.ui.files_listWidget.itemSelectionChanged.connect(self._update_image_data)
 
         # connect spinbox
         self.checkbox_connectionmap = {self.ui.checkBox_userange: [self.ui.spinBox_drawrange_lower,
                                                                    self.ui.spinBox_drawrange_upper],
                                        self.ui.checkBox_autonrow: [self.ui.spinBox_nrow]}
-        self.connect(self.ui.checkBox_autonrow, SIGNAL('stateChanged(int)'), self, SLOT('_toggle_checkboxes()'))
-        self.connect(self.ui.checkBox_userange, SIGNAL('stateChanged(int)'), self, SLOT('_toggle_checkboxes()'))
-        self.connect(self.ui.checkBox_autonrow, SIGNAL('stateChanged(int)'), self, SLOT('_update_image_data()'))
-        self.connect(self.ui.checkBox_userange, SIGNAL('stateChanged(int)'), self, SLOT('_update_image_data()'))
-        self.connect(self.ui.spinBox_nrow, SIGNAL('valueChanged(int)'), self, SLOT('_update_image_data()'))
-        self.connect(self.ui.spinBox_offset,SIGNAL('valueChanged(int)'), self, SLOT('_update_image_data()'))
-        self.connect(self.ui.spinBox_drawrange_upper,SIGNAL('valueChanged(int)'), self, SLOT('_update_image_data()'))
-        self.connect(self.ui.spinBox_drawrange_lower,SIGNAL('valueChanged(int)'), self, SLOT('_update_image_data()'))
-        self.connect(self.ui.spinBox_padding,SIGNAL('valueChanged(int)'), self, SLOT('_update_image_data()'))
 
-        self.connect(self.draw_worker, SIGNAL('finished()'), self, SLOT('_update_displayed_img()'))
+
+        self.ui.checkBox_autonrow.stateChanged.connect(self._toggle_checkboxes)
+        self.ui.checkBox_userange.stateChanged.connect(self._toggle_checkboxes)
+        self.ui.checkBox_autonrow.stateChanged.connect(self._update_image_data)
+        self.ui.checkBox_userange.stateChanged.connect(self._update_image_data)
+        self.ui.spinBox_nrow.valueChanged.connect(self._update_image_data)
+        self.ui.spinBox_offset.valueChanged.connect(self._update_image_data)
+        self.ui.spinBox_drawrange_upper.valueChanged.connect(self._update_image_data)
+        self.ui.spinBox_drawrange_lower.valueChanged.connect(self._update_image_data)
+        self.ui.spinBox_padding.valueChanged.connect(self._update_image_data)
+
+
+        self.draw_worker.finished.connect(self._update_displayed_img)
+        self.draw_worker.display_msg.connect(self._show_message)
+        self._show_message(self.tr('Ready.'))
+
+    @Slot(str)
+    def _show_message(self, s):
+        self._status_bar.showMessage(s)
 
     def _toggle_checkboxes(self):
         target = self.checkbox_connectionmap[self.sender()]
@@ -91,7 +97,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self._progress_bar.setDisabled(False)
         self._progress_bar.setValue(val)
         if val == 100:
-            self._status_bar.showMessage('Ready')
+            self._status_bar.showMessage('Ready.')
 
 
     def _update_file_list_view(self):
@@ -163,13 +169,23 @@ class ngv_mainwindow(QMainWindow, QWidget):
             mb.showMessage(self.tr("Please specify source image directories first!"))
             return
 
+        if self.io_write_worker.isRunning():
+            mb = QErrorMessage(self)
+            mb.showMessage(self.tr("Export in progress already."))
+            return
+
         # There are no config if no images are selected, so we go ahead and activate one.
         if len(self.ui.files_listWidget.selectedItems()) == 0:
             self.ui.files_listWidget.setCurrentItem(self.ui.files_listWidget.itemAt(0, 0))
 
-        writer_draw_worker = draw_grid_wrapper(self)
+        writer_draw_worker = draw_grid_wrapper(self.io_write_worker)
         writer_draw_worker.set_config(self.draw_worker._config)
         write_dir = QFileDialog.getExistingDirectory(self, self.tr("Write Image"))
+
+        if not os.path.isdir(write_dir):
+            self._show_message("No directory supplied!")
+            return
+
         self.io_write_worker.configure_writer(self.io_reader_worker, writer_draw_worker, write_dir)
         self.io_write_worker.start()
 

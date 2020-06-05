@@ -46,7 +46,7 @@ class ngv_io_reader_wrapper(QThread):
         N = len(self._reader)
         for i, (key, im) in enumerate(self._reader):
             self.update_progress.emit((100 * i) // N)
-            self.display_msg.emit(self.tr("Handling: ") + key)
+            self.display_msg.emit(self.tr("Writing ") + key)
             yield key, im
 
     def run(self):

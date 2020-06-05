@@ -2,7 +2,7 @@ from PySide2.QtCore import QThread, Signal, Slot, SLOT, SIGNAL
 from .draw_grid import *
 
 class draw_grid_wrapper(QThread):
-    error_msg = Signal(str)
+    display_msg = Signal(str)
 
     def __init__(self, parent=None):
         QThread.__init__(self)
@@ -24,7 +24,7 @@ class draw_grid_wrapper(QThread):
 
             self._result = draw_grid(target_im, **self._config)
         except AttributeError:
-            self.error_msg.emit(self.tr("Wrong drawing configuration"))
+            self.display_msg.emit(self.tr("Wrong drawing configuration"))
 
     def get_result(self):
         return self._result
