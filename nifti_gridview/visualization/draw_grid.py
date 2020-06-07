@@ -51,7 +51,10 @@ def draw_grid(image, crop=None, nrow=None, offset=None, background=0, margins=1,
 
 
     if isinstance(image, np.ndarray):
-        image = tensor(image)
+        try:
+            image = tensor(image)
+        except:
+            image = tensor(image.astype('int32'))
 
     # Offset the image by padding zeros
     if not offset is None:

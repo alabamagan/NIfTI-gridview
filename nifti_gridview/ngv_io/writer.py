@@ -5,10 +5,11 @@ import cv2
 from visualization import draw_grid_wrapper
 
 class writer(object):
-    def __init__(self, data_loader, draw_worker, outdir, **kwargs):
+    def __init__(self, data_loader, seg_loaders, draw_worker, outdir, **kwargs):
         assert isinstance(draw_worker, draw_grid_wrapper), "Incorrect type.and"
 
         self._data_loader = data_loader
+        self._seg_loaders = seg_loaders
         self._outdir = outdir
         self._draw_worker = draw_worker
         self._high_res = kwargs['high_res'] if 'high_res' in kwargs else False
@@ -24,7 +25,10 @@ class writer(object):
         for key, img in self._data_loader:
             tmp_config = {
                 'target_im': img,
+                'segment': []
             }
+            for s_loader in self._seg_loaders:
+                tmp_config['segment'].append(s_loader[key])
             self._draw_worker.update_config(tmp_config)
             self._draw_worker.run()
 

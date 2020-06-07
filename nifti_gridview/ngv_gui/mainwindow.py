@@ -175,6 +175,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self.ui.tableWidget_segmentations.setItem(row_num, 0, row_color_widget)
         self.ui.tableWidget_segmentations.setItem(row_num, 1, row_identifier)
 
+        self._update_image_data()
+
 
 
     def _update_image_data(self):
@@ -254,7 +256,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
             self._show_message("No directory supplied!")
             return
 
-        self.io_write_worker.configure_writer(self.io_reader_worker, writer_draw_worker, write_dir)
+        self.io_write_worker.configure_writer(self.io_reader_worker, self.io_seg_workers,
+                                              writer_draw_worker, write_dir)
         self.io_write_worker.start()
 
 
