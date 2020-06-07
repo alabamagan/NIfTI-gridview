@@ -175,7 +175,11 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self.ui.tableWidget_segmentations.setItem(row_num, 0, row_color_widget)
         self.ui.tableWidget_segmentations.setItem(row_num, 1, row_identifier)
 
-        self._update_image_data()
+        # Update display
+        if len(self.ui.files_listWidget.selectedItems()) == 0:
+            self.ui.files_listWidget.setCurrentItem(self.ui.files_listWidget.itemAt(0, 0))
+        else:
+            self._update_image_data()
 
 
 
@@ -287,6 +291,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         item.setBackgroundColor(color)
         item.setSelected(False)
+
+        self._update_image_data()
 
     def resizeEvent(self, *args, **kwargs):
         """Inherit and change behavior for resizing"""
