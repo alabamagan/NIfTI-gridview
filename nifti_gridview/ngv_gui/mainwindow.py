@@ -1,7 +1,8 @@
 import sys
-from PySide2.QtWidgets import QMainWindow, QWidget, QProgressBar, QErrorMessage, QFileDialog
-from PySide2.QtCore import SIGNAL, SLOT, Signal, Slot, QStringListModel
-from PySide2.QtGui import QImage, QPixmap
+from PySide2.QtWidgets import QMainWindow, QWidget, QProgressBar, QErrorMessage, \
+    QFileDialog, QTableWidgetItem, QColorDialog
+from PySide2.QtCore import SIGNAL, SLOT, Signal, Slot, QStringListModel, Qt
+from PySide2.QtGui import QImage, QPixmap, QColor
 from ._mainwindow import *
 from ngv_io import ngv_io_reader_wrapper, ngv_io_writer_wrapper
 from visualization import draw_grid_wrapper, colormaps
@@ -46,8 +47,9 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         # set up UI layouts
         # self._left_panel = QStackedLayout()
-        self.ui.actionOpen_Folder.triggered.connect(self._action_openfolder)
+        self.ui.actionOpen_Folder.triggered.connect(self._action_open_folder)
         self.ui.actionExport_Images.triggered.connect(self._action_export_images)
+        self.ui.actionOpen_Segmentation_Folder.triggered.connect(self._action_open_segmentation_folder)
 
         # Set up io object
         self.draw_worker = draw_grid_wrapper(self)
@@ -56,6 +58,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self.io_reader_worker.update_progress.connect(self._update_progress)
         self.io_reader_worker.display_msg.connect(self._show_message)
         self.io_write_worker.display_msg.connect(self._show_message)
+        self.io_seg_workers = []
 
 
         # Set up drawer
@@ -76,9 +79,14 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self.ui.spinBox_padding.valueChanged.connect(self._update_image_data)
 
 
+        # connect drawing worker
         self.draw_worker.finished.connect(self._update_displayed_img)
         self.draw_worker.display_msg.connect(self._show_message)
         self._show_message(self.tr('Ready.'))
+
+
+        # Connect tablewidget
+        self.ui.tableWidget_segmentations.itemDoubleClicked.connect(self._select_color)
 
         ######################
         # Initialize UI
@@ -125,7 +133,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self.ui.files_listWidget.sortItems()
 
 
-    def _action_openfolder(self):
+    def _action_open_folder(self):
         """
         Read nii.gz and push items into list view widget.
         """
@@ -136,6 +144,38 @@ class ngv_mainwindow(QMainWindow, QWidget):
                                                   QFileDialog.ShowDirsOnly)
         self.io_reader_worker.configure_reader(reader_root_dir, True)
         self._update_file_list_view()
+
+        # Allow loading segmentations afterwards
+        self.ui.actionOpen_Segmentation_Folder.setEnabled(True)
+
+    def _action_open_segmentation_folder(self):
+        fd = QFileDialog(self)
+        reader_root_dir = fd.getExistingDirectory(self, self.tr("Open"),
+                                                  '/home/***REMOVED***/Source/Repos/***REMOVED***_Segmentation/***REMOVED***_Segmentation',
+                                                  QFileDialog.ShowDirsOnly)
+
+        if not os.path.isdir(reader_root_dir):
+            return
+
+        seg_loader = ngv_io_reader_wrapper()
+        seg_loader.configure_reader(reader_root_dir, True, dtype='uint8')
+
+        self.io_seg_workers.append(seg_loader)
+
+        # Add item to table
+        row_num = self.ui.tableWidget_segmentations.rowCount()
+        row_identifier = QTableWidgetItem(os.path.basename(reader_root_dir))
+        row_identifier.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+
+        row_color_widget = QTableWidgetItem()
+        row_color_widget.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+        row_color_widget.setBackgroundColor(QColor(255, 255, 0))
+
+        self.ui.tableWidget_segmentations.insertRow(self.ui.tableWidget_segmentations.rowCount())
+        self.ui.tableWidget_segmentations.setItem(row_num, 0, row_color_widget)
+        self.ui.tableWidget_segmentations.setItem(row_num, 1, row_identifier)
+
+
 
     def _update_image_data(self):
         """Triggered when list widget item changed. Load image into cache."""
@@ -169,16 +209,28 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         config = {
             'target_im': target_im,
+            'segment_color': [self.ui.tableWidget_segmentations.itemAt(i, 0).background() \
+                              for i in range(self.ui.tableWidget_segmentations.rowCount())],
             'nrow': nrow,
             'offset': self.ui.spinBox_offset.value(),
             'margins': self.ui.spinBox_padding.value(),
-            'cmap': self.ui.comboBox_cmap.currentText()
+            'cmap': self.ui.comboBox_cmap.currentText(),
+            'thickness': 2
         }
+        for s in self.io_seg_workers:
+            if not 'segment' in config:
+                config['segment'] = []
+            seg_temp = s[active_file]
+            config['segment'].append(seg_temp)
+
         self.draw_worker.set_config(config)
         self.draw_worker.start()
         # self.draw_worker.run()
 
     def _action_export_images(self):
+        """
+        Export images as either .png or .jpg to the destination folder using the current configuration.
+        """
         # Error check
         if self.ui.files_listWidget.count() == 0:
             mb = QErrorMessage(self)
@@ -216,6 +268,22 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         # TODO: Cahce this image data somewhere, display and scale on another slot, also triggered by scaling.
         self.ui.image_label.setPixmap(qImg.scaledToHeight(self.ui.image_label.height()))
+
+    @Slot(QTableWidgetItem)
+    def _select_color(self, item):
+        if not isinstance(item, QTableWidgetItem):
+            raise ValueError
+
+        if item.text() != "":
+            return
+
+        color = QColorDialog().getColor()
+        if not color.isValid():
+            item.setSelected(False)
+            return
+
+        item.setBackgroundColor(color)
+        item.setSelected(False)
 
     def resizeEvent(self, *args, **kwargs):
         """Inherit and change behavior for resizing"""

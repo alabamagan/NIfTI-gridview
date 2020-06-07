@@ -12,20 +12,25 @@ class reader(object):
         recurisve (bool, Optional):
             Flag to read nifti files recursively. Default to False.
         fname_filter (dict, Optional):
-            Dictionary in formati of {'[regex_globber]': [list of ids], 'regex_matcher': None}. For
+            Dictionary in format of {'[regex_globber]': [list of ids], 'regex_matcher': None}. For
             regex globbers, the regex will glob ids from filenames and include only ids that are present
             in the `[list of ids]` as strings. If the value is `None`, the regex will be treated as a
             matcher and filter away all the files with names that don't match.
+        id_globber (str, Optional):
+            Regex string for globbing IDs from files to align datasets. Default to "([0-9]{3,5})"
 
     """
-    def __init__(self, rootdir, recursive=False, fname_filters=None, dtype='float', **kwargs):
+    def __init__(self, rootdir, recursive=False, fname_filters=None, dtype='float',
+                 id_globber="(^[a-zA-Z0-9]+)", **kwargs):
         # super(reader, self).__init__()
 
         self.rootdir = rootdir
         self.recursive = recursive
         self.fname_filter = fname_filters
         self.dtype = dtype
+        self.id_globber = id_globber
 
+        self._ids = {}
         self._files = {}
         self._images = {}
         self._iter = None
@@ -33,6 +38,9 @@ class reader(object):
         self._parse_rootdir()
 
     def _parse_rootdir(self):
+        """
+        Loader uses file name as keeys
+        """
         assert os.path.isdir(self.rootdir), "Cannot open root dir from {}!".format(self.rootdir)
 
         # Read files
@@ -73,6 +81,13 @@ class reader(object):
                 for keys in keys_to_pop:
                     self._files.pop(keys)
 
+        # Globe ids
+        for fname in self._files:
+            mo = re.search(self.id_globber, fname)
+            if not mo is None:
+                self._ids[fname[mo.start():mo.end()]] = fname
+
+
     def _read_files(self):
         for i, f in enumerate(self._files):
             self._images[f] = sitk.GetArrayFromImage(sitk.ReadImage(self._files[f])).astype(self.dtype)
@@ -81,11 +96,23 @@ class reader(object):
         key = list(self._files.keys())[i]
         self._images[key] = sitk.GetArrayFromImage(sitk.ReadImage(self._files[key])).astype(self.dtype)
 
+    def get_item_by_id(self, item):
+        if not item in self._ids:
+            return None
+        else:
+            return self[self._ids[item]]
+
     def __getitem__(self, item):
         if not item in self._images:
             try:
                 self._images[item] = sitk.GetArrayFromImage(sitk.ReadImage(self._files[item]))
             except:
+                try:
+                    id = re.search(self.id_globber, item).group()
+                    return self[self._ids[id]]
+                except:
+                    print("Cannot read item with ID: {}".format(id))
+                    pass
                 print("Cannot read item with key: {}. Have you called _read_files()?".format(item))
                 return 0
         return self._images[item]

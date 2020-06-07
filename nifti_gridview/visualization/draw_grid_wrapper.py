@@ -23,6 +23,10 @@ class draw_grid_wrapper(QThread):
             target_im = self._config.pop('target_im')
 
             self._result = draw_grid(target_im, **self._config)
+            if 'segment' in self._config and 'segment_color' in self._config:
+                for ss, ss_color in zip(self._config['segment'], self._config['segment_color']):
+                    self._result = draw_grid_contour(self._result, ss, color=ss_color, **self._config)
+
         except AttributeError:
             self.display_msg.emit(self.tr("Wrong drawing configuration"))
 

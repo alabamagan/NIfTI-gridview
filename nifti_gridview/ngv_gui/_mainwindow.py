@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Fri Jun  5 17:34:17 2020
+# Created: Fri Jun  5 20:39:37 2020
 #      by: pyside2-uic 2.0.0 running on PySide2 5.6.0~a1
 #
 # WARNING! All changes made in this file will be lost!
@@ -114,22 +114,16 @@ class Ui_ngv_mainwindow(object):
         self.label_6.setObjectName("label_6")
         self.verticalLayout_4.addWidget(self.label_6)
         self.tableWidget_segmentations = QtWidgets.QTableWidget(self.page_4)
-        self.tableWidget_segmentations.setColumnCount(5)
+        self.tableWidget_segmentations.setColumnCount(2)
         self.tableWidget_segmentations.setObjectName("tableWidget_segmentations")
-        self.tableWidget_segmentations.setColumnCount(5)
+        self.tableWidget_segmentations.setColumnCount(2)
         self.tableWidget_segmentations.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_segmentations.setHorizontalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_segmentations.setHorizontalHeaderItem(1, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.tableWidget_segmentations.setHorizontalHeaderItem(2, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.tableWidget_segmentations.setHorizontalHeaderItem(3, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.tableWidget_segmentations.setHorizontalHeaderItem(4, item)
         self.tableWidget_segmentations.horizontalHeader().setCascadingSectionResizes(True)
-        self.tableWidget_segmentations.horizontalHeader().setDefaultSectionSize(35)
+        self.tableWidget_segmentations.horizontalHeader().setDefaultSectionSize(40)
         self.tableWidget_segmentations.horizontalHeader().setMinimumSectionSize(25)
         self.tableWidget_segmentations.horizontalHeader().setStretchLastSection(True)
         self.verticalLayout_4.addWidget(self.tableWidget_segmentations)
@@ -197,11 +191,8 @@ class Ui_ngv_mainwindow(object):
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_3), QtWidgets.QApplication.translate("ngv_mainwindow", "General Options", None, -1))
         self.label_4.setText(QtWidgets.QApplication.translate("ngv_mainwindow", "Colormap: ", None, -1))
         self.label_6.setText(QtWidgets.QApplication.translate("ngv_mainwindow", "Segmentation:", None, -1))
-        self.tableWidget_segmentations.horizontalHeaderItem(0).setText(QtWidgets.QApplication.translate("ngv_mainwindow", "#", None, -1))
-        self.tableWidget_segmentations.horizontalHeaderItem(1).setText(QtWidgets.QApplication.translate("ngv_mainwindow", "R", None, -1))
-        self.tableWidget_segmentations.horizontalHeaderItem(2).setText(QtWidgets.QApplication.translate("ngv_mainwindow", "G", None, -1))
-        self.tableWidget_segmentations.horizontalHeaderItem(3).setText(QtWidgets.QApplication.translate("ngv_mainwindow", "B", None, -1))
-        self.tableWidget_segmentations.horizontalHeaderItem(4).setText(QtWidgets.QApplication.translate("ngv_mainwindow", "A", None, -1))
+        self.tableWidget_segmentations.horizontalHeaderItem(0).setText(QtWidgets.QApplication.translate("ngv_mainwindow", "Color", None, -1))
+        self.tableWidget_segmentations.horizontalHeaderItem(1).setText(QtWidgets.QApplication.translate("ngv_mainwindow", "Segmentation", None, -1))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page_4), QtWidgets.QApplication.translate("ngv_mainwindow", "Image Options", None, -1))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.widget), QtWidgets.QApplication.translate("ngv_mainwindow", "Toolbox", None, -1))
         self.menuFiles.setTitle(QtWidgets.QApplication.translate("ngv_mainwindow", "Files", None, -1))

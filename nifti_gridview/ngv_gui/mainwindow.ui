@@ -222,13 +222,13 @@
             <item>
              <widget class="QTableWidget" name="tableWidget_segmentations">
               <property name="columnCount">
-               <number>5</number>
+               <number>2</number>
               </property>
               <attribute name="horizontalHeaderCascadingSectionResizes">
                <bool>true</bool>
               </attribute>
               <attribute name="horizontalHeaderDefaultSectionSize">
-               <number>35</number>
+               <number>40</number>
               </attribute>
               <attribute name="horizontalHeaderMinimumSectionSize">
                <number>25</number>
@@ -238,30 +238,12 @@
               </attribute>
               <column>
                <property name="text">
-                <string>#</string>
-               </property>
-               <property name="toolTip">
-                <string>Name of the loaded segmentation set.</string>
+                <string>Color</string>
                </property>
               </column>
               <column>
                <property name="text">
-                <string>R</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>G</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>B</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string>A</string>
+                <string>Segmentation</string>
                </property>
               </column>
              </widget>
