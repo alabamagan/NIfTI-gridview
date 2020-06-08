@@ -1,15 +1,13 @@
 import sys
 from PySide2.QtWidgets import QMainWindow, QWidget, QProgressBar, QErrorMessage, \
     QFileDialog, QTableWidgetItem, QColorDialog
-from PySide2.QtCore import SIGNAL, SLOT, Signal, Slot, QStringListModel, Qt
+from PySide2.QtCore import Slot, Qt
 from PySide2.QtGui import QImage, QPixmap, QColor
 from ._mainwindow import *
 from ngv_io import ngv_io_reader_wrapper, ngv_io_writer_wrapper
-from ngv_model import draw_grid_wrapper, colormaps
+from ngv_model import draw_grid_wrapper, colormaps, ngv_logger
 
 import numpy as np
-import cv2
-import logging as lg
 import os
 
 class ngv_mainwindow(QMainWindow, QWidget):
@@ -29,8 +27,9 @@ class ngv_mainwindow(QMainWindow, QWidget):
         # TODO: Move cache to a class for memory managements
         self._image_cache = {}
 
-
         #TODO: Logger
+        ngv_logger.global_log("=================== NIfTI-gridview new session ===================")
+        ngv_logger.global_log("Initiating ngv...")
 
         # self.ui.files_listWidget.additem
         # Manual bar
@@ -47,6 +46,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         # set up UI layouts
         # self._left_panel = QStackedLayout()
+        ngv_logger.global_log("Establish UI connections...")
         self.ui.actionOpen_Folder.triggered.connect(self._action_open_folder)
         self.ui.actionExport_Images.triggered.connect(self._action_export_images)
         self.ui.actionOpen_Segmentation_Folder.triggered.connect(self._action_open_segmentation_folder)
@@ -91,6 +91,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
         ######################
         # Initialize UI
         ######################
+        ngv_logger.global_log("Initialize UI layout...")
         w = self.ui.tableWidget_segmentations.width()
         for i in range(5):
             self.ui.tableWidget_segmentations.setColumnWidth(i, w / 5)
@@ -102,6 +103,9 @@ class ngv_mainwindow(QMainWindow, QWidget):
         # Connection after UI initialized
         ##################################
         self.ui.comboBox_cmap.currentTextChanged.connect(self._update_image_data)
+        ngv_logger.global_log("Ready.")
+
+
 
     @Slot(str)
     def _show_message(self, s):
@@ -215,7 +219,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         config = {
             'target_im': target_im,
-            'segment_color': [self.ui.tableWidget_segmentations.itemAt(i, 0).background() \
+            'segment_color': [self.ui.tableWidget_segmentations.item(i, 0).background() \
                               for i in range(self.ui.tableWidget_segmentations.rowCount())],
             'nrow': nrow,
             'offset': self.ui.spinBox_offset.value(),
@@ -250,7 +254,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         # There are no config if no images are selected, so we go ahead and activate one.
         if len(self.ui.files_listWidget.selectedItems()) == 0:
-            self.ui.files_listWidget.setCurrentItem(self.ui.files_listWidget.itemAt(0, 0))
+            self.ui.files_listWidget.setCurrentItem(self.ui.files_listWidget.item(0, 0))
 
         writer_draw_worker = draw_grid_wrapper(self.io_write_worker)
         writer_draw_worker.set_config(self.draw_worker._config)

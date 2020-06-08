@@ -1,6 +1,7 @@
 from .reader import *
 from .writer import *
 from PySide2.QtCore import QThread, Signal
+from ngv_model import ngv_logger
 
 class ngv_io_reader_wrapper(QThread):
     """
@@ -46,14 +47,17 @@ class ngv_io_reader_wrapper(QThread):
         N = len(self._reader)
         for i, (key, im) in enumerate(self._reader):
             self.update_progress.emit((100 * i) // N)
-            self.display_msg.emit(self.tr("Writing ") + key)
+            self.display_msg.emit(self.tr("Reading ") + key)
+            ngv_logger.global_log("Reading {}".format(key))
             yield key, im
 
     def run(self):
         try:
             self.read_all_targets()
-        except:
+        except Exception as e:
             self.display_msg.emit(self.tr("Reader encounters error..."))
+            ngv_logger.global_log("Reader encounters exception: {}".format(e), 40)
+
 
 class ngv_io_writer_wrapper(QThread):
     """
@@ -74,5 +78,5 @@ class ngv_io_writer_wrapper(QThread):
         try:
             self._writer.write()
         except Exception as e:
-            print("Error: {}".format(e))
+            ngv_logger.global_log("Writer encounter exception: {}".format(e), 40)
             self.display_msg.emit(self.tr("Writer encounters error: {}".format(e)))
