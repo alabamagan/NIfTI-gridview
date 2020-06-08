@@ -2,7 +2,7 @@ import numpy as np
 import os
 import cv2
 
-from visualization import draw_grid_wrapper
+from ngv_model import draw_grid_wrapper
 
 class writer(object):
     def __init__(self, data_loader, seg_loaders, draw_worker, outdir, **kwargs):

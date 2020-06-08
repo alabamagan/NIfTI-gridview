@@ -5,7 +5,7 @@ from PySide2.QtCore import SIGNAL, SLOT, Signal, Slot, QStringListModel, Qt
 from PySide2.QtGui import QImage, QPixmap, QColor
 from ._mainwindow import *
 from ngv_io import ngv_io_reader_wrapper, ngv_io_writer_wrapper
-from visualization import draw_grid_wrapper, colormaps
+from ngv_model import draw_grid_wrapper, colormaps
 
 import numpy as np
 import cv2

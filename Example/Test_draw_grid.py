@@ -1,6 +1,6 @@
 from nifti_gridview import *
 from ngv_io import *
-from visualization import draw_grid_wrapper
+from ngv_model import draw_grid_wrapper
 
 def main():
     rootdir = '/home/***REMOVED***/Source/Repos/***REMOVED***_Segmentation/***REMOVED***_Segmentation/44.Benign_Malignant_Cropped_Largest'

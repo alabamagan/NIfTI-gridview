@@ -16,6 +16,8 @@ class reader(object):
             regex globbers, the regex will glob ids from filenames and include only ids that are present
             in the `[list of ids]` as strings. If the value is `None`, the regex will be treated as a
             matcher and filter away all the files with names that don't match.
+        dtype (str or type, Optional):
+            Type of data to cast the data into.
         id_globber (str, Optional):
             Regex string for globbing IDs from files to align datasets. Default to "([0-9]{3,5})"
 
@@ -110,10 +112,10 @@ class reader(object):
                 try:
                     id = re.search(self.id_globber, item).group()
                     return self[self._ids[id]]
-                except:
+                except Exception as e:
                     print("Cannot read item with ID: {}".format(id))
                     pass
-                print("Cannot read item with key: {}. Have you called _read_files()?".format(item))
+                print("Cannot read item with key: {}.".format(item))
                 return 0
         return self._images[item]
 
