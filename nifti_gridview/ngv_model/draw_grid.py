@@ -131,7 +131,7 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
         seg = tensor(seg.astype('uint8'))
 
     # Offset the image by padding zeros
-    if not offset is None:
+    if not offset is None and offset != 0:
         seg = seg.squeeze()
         seg = nn.ConstantPad3d((0, 0, 0, 0, offset, 0), 0)(seg)
 
@@ -170,7 +170,7 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
 
     # Draw contour on image grid
     try:
-        cv2.drawContours(im_grid, contours, -1, color.color().getRgb()[:3], thickness=thickness)
+        cv2.drawContours(im_grid, contours, -1, list(color.color().getRgb()[:3]) + [128], thickness=thickness)
     except Exception as e:
         print(e)
     return im_grid

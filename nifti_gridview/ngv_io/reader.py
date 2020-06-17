@@ -112,14 +112,13 @@ class reader(object):
             except:
                 try:
                     id = re.search(self.id_globber, item).group()
-                    return self[self._ids[id]]
+                    return self.get_item_by_id(id)
                 except Exception as e:
+                    ngv_logger.global_log("Cannot read item with key: {}.".format(item), 30)
                     if id is not None:
-                        ngv_logger.global_log("Cannot read item with ID: {}".format(id), 30)
+                            ngv_logger.global_log("Cannot read item with ID: {}".format(id), 30)
                     ngv_logger.global_log("Reader encounter exception: {}".format(e))
-                    pass
-                ngv_logger.global_log("Cannot read item with key: {}.".format(item), 30)
-                return 0
+                    return None
         return self._images[item]
 
     def __len__(self):

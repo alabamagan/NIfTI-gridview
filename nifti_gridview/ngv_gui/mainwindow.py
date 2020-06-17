@@ -153,6 +153,9 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self.ui.actionOpen_Segmentation_Folder.setEnabled(True)
 
     def _action_open_segmentation_folder(self):
+        """
+        Read nii.gz files as segmentation. Contours will be drawn if IDs align.
+        """
         fd = QFileDialog(self)
         reader_root_dir = fd.getExistingDirectory(self, self.tr("Open"),
                                                   '/home/***REMOVED***/Source/Repos/***REMOVED***_Segmentation/***REMOVED***_Segmentation',
@@ -173,6 +176,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         row_color_widget = QTableWidgetItem()
         row_color_widget.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+
+        # TODO: Multiple color as default.
         row_color_widget.setBackgroundColor(QColor(255, 255, 0))
 
         self.ui.tableWidget_segmentations.insertRow(self.ui.tableWidget_segmentations.rowCount())

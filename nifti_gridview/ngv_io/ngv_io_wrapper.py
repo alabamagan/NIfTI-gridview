@@ -61,7 +61,8 @@ class ngv_io_reader_wrapper(QThread):
 
 class ngv_io_writer_wrapper(QThread):
     """
-    This class is the worker thread that handles writing images
+    This class is the worker thread that handles writing images. Note that writing progress is updated from reader
+    signal emission.
     """
     update_progress = Signal(int)
     display_msg = Signal(str)
