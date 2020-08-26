@@ -1,4 +1,5 @@
 import sys
+
 from PySide2.QtWidgets import QMainWindow, QWidget, QProgressBar, QErrorMessage, \
     QFileDialog, QTableWidgetItem, QColorDialog
 from PySide2.QtCore import Slot, Qt
@@ -321,6 +322,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
     def _np_to_QPixmap(inim):
         """Convert numpy uint8 image to QPixmap"""
         assert isinstance(inim, np.ndarray), "Incorrect input type!"
+        print(inim.min(), inim.max(), 'diu', inim.shape)
         height, width, channel = inim.shape
         bytesPerLine = 3 * width
         qImg = QPixmap(QImage(inim, width, height, bytesPerLine, QImage.Format_RGB888))

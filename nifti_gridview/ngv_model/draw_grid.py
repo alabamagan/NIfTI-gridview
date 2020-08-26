@@ -1,7 +1,7 @@
-from torchvision.utils import make_grid
-from torch import tensor, nn
+from .make_grid import make_grid
 import numpy as np
 import cv2
+from ngv_gui import ngv_logger
 
 colormaps = {
     'Default': None,
@@ -24,7 +24,7 @@ def draw_grid(image, crop=None, nrow=None, offset=None, background=0, margins=1,
     This is the wrapper function for make_grid that supports some extra tweaking.
 
     Args:
-        image (np.ndarray or torch.Tensor):
+        image (np.ndarray):
             Input 3D image, should have a dimension of 3 with configuration Z x W x H.
         crop (dict, Optional):
             If provided with key `{'center': [w, h] 'size': [sw, sh] or int }`, the image is cropped
@@ -47,23 +47,19 @@ def draw_grid(image, crop=None, nrow=None, offset=None, background=0, margins=1,
     Returns:
         torch.Tensor
     """
-    assert offset >= 0 or offset is None, "In correct offset setting!"
+    if not offset is None:
+        if not offset >= 0:
+            raise ArithmeticError("Offset cannot be negative")
 
-
-    if isinstance(image, np.ndarray):
-        try:
-            image = tensor(image)
-        except:
-            image = tensor(image.astype('int32'))
 
     # Offset the image by padding zeros
     if not offset is None:
         image = image.squeeze()
-        image = nn.ConstantPad3d((0, 0, 0, 0, offset, 0), 0)(image)
+        image = np.pad(image, [(0, 0), (0, 0), (offset, 0)], constant_values=0)
 
     # Handle dimensions
-    if image.dim() == 3:
-        image = image.unsqueeze(1)
+    if image.ndim == 3:
+        image = np.expand_dims(image, axis=1)
 
     # compute number of image per row if now provided
     if nrow is None:
@@ -88,11 +84,17 @@ def draw_grid(image, crop=None, nrow=None, offset=None, background=0, margins=1,
 
     # return image as RGB with range 0 to 255
     im_grid = make_grid(image, nrow=nrow, padding=margins, normalize=True, pad_value=background)
-    im_grid = (im_grid * 255.).permute(1, 2, 0).numpy().astype('uint8').copy()
+    im_grid = (im_grid * 255.).transpose(1, 2, 0).astype('uint8').copy()
 
     if not (cmap is None or cmap == 'Default'):
         im_grid = cv2.applyColorMap(im_grid[:,:,0], colormaps[cmap])
 
+    if im_grid.shape[2] == 1:
+        im_grid = np.concatenate([im_grid] * 3, axis=2)
+    # elif im_grid.shape[2] == 1:
+    #     im_grid = cv2.applyColorMap(im_grid[:,:,0], cv2.COLORMAP_BONE)
+    # elif im_grid.squeeze().ndim == 2:
+    #     im_grid = cv2.applyColorMap(im_grid, cv2.COLORMAP_BONE)
     # im_grid = (im_grid).permute(1, 2, 0).numpy().astype('float').copy()
     return im_grid
 
@@ -128,16 +130,16 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
 
 
     if isinstance(seg, np.ndarray):
-        seg = tensor(seg.astype('uint8'))
+        seg = seg.astype('uint8')
 
     # Offset the image by padding zeros
     if not offset is None and offset != 0:
         seg = seg.squeeze()
-        seg = nn.ConstantPad3d((0, 0, 0, 0, offset, 0), 0)(seg)
+        seg = np.pad(seg, [(0, 0), (0, 0), (offset, 0)], constant_values=0)
 
     # Handle dimensions
-    if seg.dim() == 3:
-        seg = seg.unsqueeze(1)
+    if seg.ndim == 3:
+        seg = np.expand_dims(seg, axis=1)
 
     # compute number of image per row if now provided
     if nrow is None:
@@ -162,15 +164,20 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
 
     # return image as RGB with range 0 to 255
     seg_grid = make_grid(seg, nrow=nrow, padding=margins, normalize=False, pad_value=background)
-    seg_grid = seg_grid[0].numpy().astype('uint8').copy()
+    seg_grid = seg_grid[0].astype('uint8').copy()
 
     # Find Contours
-    _a, contours, _b = cv2.findContours(seg_grid, mode=cv2.RETR_EXTERNAL,
+    try:
+        _a, contours, _b = cv2.findContours(seg_grid, mode=cv2.RETR_EXTERNAL,
+                                            method=cv2.CHAIN_APPROX_SIMPLE)
+    except:
+        contours, _b = cv2.findContours(seg_grid, mode=cv2.RETR_EXTERNAL,
                                         method=cv2.CHAIN_APPROX_SIMPLE)
 
     # Draw contour on image grid
     try:
         cv2.drawContours(im_grid, contours, -1, list(color.color().getRgb()[:3]) + [128], thickness=thickness)
     except Exception as e:
-        print(e)
+        ngv_logger.global_log("Error during draw contours.")
+        ngv_logger.global_log(e)
     return im_grid
