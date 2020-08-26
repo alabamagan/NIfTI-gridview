@@ -1,7 +1,6 @@
 from .make_grid import make_grid
 import numpy as np
 import cv2
-from ngv_gui import ngv_logger
 
 colormaps = {
     'Default': None,
@@ -178,6 +177,7 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
     try:
         cv2.drawContours(im_grid, contours, -1, list(color.color().getRgb()[:3]) + [128], thickness=thickness)
     except Exception as e:
-        ngv_logger.global_log("Error during draw contours.")
-        ngv_logger.global_log(e)
+        print(e)
+        # ngv_logger.global_log("Error during draw contours.")
+        # ngv_logger.global_log(e)
     return im_grid

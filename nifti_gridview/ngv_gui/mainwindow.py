@@ -73,6 +73,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self.ui.checkBox_userange.stateChanged.connect(self._toggle_checkboxes)
         self.ui.checkBox_autonrow.stateChanged.connect(self._update_image_data)
         self.ui.checkBox_userange.stateChanged.connect(self._update_image_data)
+        self.ui.checkBox_show_slides_with_seg.stateChanged.connect(self._toggle_slides_with_seg_only)
         self.ui.spinBox_nrow.valueChanged.connect(self._update_image_data)
         self.ui.spinBox_offset.valueChanged.connect(self._update_image_data)
         self.ui.spinBox_drawrange_upper.valueChanged.connect(self._update_image_data)
@@ -119,6 +120,11 @@ class ngv_mainwindow(QMainWindow, QWidget):
                 spinbox.setEnabled(False)
             else:
                 spinbox.setEnabled(True)
+
+    def _toggle_slides_with_seg_only(self):
+        self.ui.checkBox_userange.setChecked(not self.ui.checkBox_show_slides_with_seg.isChecked())
+        self.ui.checkBox_userange.setEnabled(not self.ui.checkBox_show_slides_with_seg.isChecked())
+
 
 
     def _update_progress(self, val):
@@ -191,6 +197,9 @@ class ngv_mainwindow(QMainWindow, QWidget):
         else:
             self._update_image_data()
 
+        # Allow showing segment only images
+        self.ui.checkBox_show_slides_with_seg.setEnabled(True)
+
 
 
     def _update_image_data(self):
@@ -239,9 +248,17 @@ class ngv_mainwindow(QMainWindow, QWidget):
             seg_temp = s[active_file]
             config['segment'].append(seg_temp)
 
+        if self.ui.checkBox_show_slides_with_seg.isChecked():
+            seg = config['segment'][0]
+            slices_to_show = (seg.sum(axis=-1).sum(axis=-1) != 0)
+            config['target_im'] = target_im[slices_to_show]
+            config['segment'] = [s[slices_to_show] for s in config['segment']]
+
         self.draw_worker.set_config(config)
         self.draw_worker.start()
         # self.draw_worker.run()
+
+
 
     def _action_export_images(self):
         """
@@ -322,7 +339,6 @@ class ngv_mainwindow(QMainWindow, QWidget):
     def _np_to_QPixmap(inim):
         """Convert numpy uint8 image to QPixmap"""
         assert isinstance(inim, np.ndarray), "Incorrect input type!"
-        print(inim.min(), inim.max(), 'diu', inim.shape)
         height, width, channel = inim.shape
         bytesPerLine = 3 * width
         qImg = QPixmap(QImage(inim, width, height, bytesPerLine, QImage.Format_RGB888))
