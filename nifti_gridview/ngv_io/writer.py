@@ -33,11 +33,11 @@ class writer(object):
             self._draw_worker.run()
 
             tmp_img = self._draw_worker.get_result()
-            if tmp_img.dtype == np.dtype('double') or tmp_img.dtype == np.dtype('float'):
-                tmp_img = writer._float_im_to_RGB(tmp_img)
+            # if tmp_img.dtype == np.dtype('double') or tmp_img.dtype == np.dtype('float'):
+            #     tmp_img = writer._float_im_to_RGB(tmp_img)
 
             out_fnmae = os.path.join(self._outdir, key.replace('.nii', '').replace('.gz','') + extension)
-            cv2.imwrite(out_fnmae, tmp_img)
+            cv2.imwrite(out_fnmae, cv2.cvtColor(tmp_img, cv2.COLOR_RGB2BGR))
         pass
 
     @staticmethod
