@@ -249,10 +249,13 @@ class ngv_mainwindow(QMainWindow, QWidget):
             config['segment'].append(seg_temp)
 
         if self.ui.checkBox_show_slides_with_seg.isChecked():
-            seg = config['segment'][0]
-            slices_to_show = (seg.sum(axis=-1).sum(axis=-1) != 0)
-            config['target_im'] = target_im[slices_to_show]
-            config['segment'] = [s[slices_to_show] for s in config['segment']]
+            try:
+                seg = config['segment'][0]
+                slices_to_show = (seg.sum(axis=-1).sum(axis=-1) != 0)
+                config['target_im'] = target_im[slices_to_show]
+                config['segment'] = [s[slices_to_show] for s in config['segment']]
+            except:
+                ngv_logger.global_log("No segmentation for selected image {}.".format(active_file))
 
         self.draw_worker.set_config(config)
         self.draw_worker.start()
