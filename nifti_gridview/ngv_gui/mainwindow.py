@@ -143,6 +143,15 @@ class ngv_mainwindow(QMainWindow, QWidget):
             self.ui.files_listWidget.addItem(key)
         self.ui.files_listWidget.sortItems()
 
+        # check if segmentation folder is loaded
+        if len(self.io_seg_workers) > 0:
+            # disable those with no segmentations
+            for i in range(self.ui.files_listWidget.count()):
+                item = self.ui.files_listWidget.item(i)
+                if not self.io_seg_workers[0].has_key(item.text()):
+                    item.setFlags(~Qt.ItemIsEnabled & ~Qt.ItemIsSelectable)
+
+
 
     def _action_open_folder(self):
         """
@@ -199,11 +208,14 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         # Allow showing segment only images
         self.ui.checkBox_show_slides_with_seg.setEnabled(True)
+        self._update_file_list_view()
 
 
 
     def _update_image_data(self):
         """Triggered when list widget item changed. Load image into cache."""
+        if not self.ui.files_listWidget.selectedItems().__len__() > 0:
+            return
         active_file = self.ui.files_listWidget.selectedItems()[0].text()
         target_im = self.io_reader_worker[active_file]
 
@@ -240,22 +252,14 @@ class ngv_mainwindow(QMainWindow, QWidget):
             'offset': self.ui.spinBox_offset.value(),
             'margins': self.ui.spinBox_padding.value(),
             'cmap': self.ui.comboBox_cmap.currentText(),
-            'thickness': 2
+            'thickness': 2,
+            'seg_only': self.ui.checkBox_show_slides_with_seg.isChecked()
         }
         for s in self.io_seg_workers:
             if not 'segment' in config:
                 config['segment'] = []
             seg_temp = s[active_file]
             config['segment'].append(seg_temp)
-
-        if self.ui.checkBox_show_slides_with_seg.isChecked():
-            try:
-                seg = config['segment'][0]
-                slices_to_show = (seg.sum(axis=-1).sum(axis=-1) != 0)
-                config['target_im'] = target_im[slices_to_show]
-                config['segment'] = [s[slices_to_show] for s in config['segment']]
-            except:
-                ngv_logger.global_log("No segmentation for selected image {}.".format(active_file))
 
         self.draw_worker.set_config(config)
         self.draw_worker.start()
@@ -290,8 +294,16 @@ class ngv_mainwindow(QMainWindow, QWidget):
             self._show_message("No directory supplied!")
             return
 
+        if self.ui.checkBox_show_slides_with_seg.isChecked():
+            index_to_write = np.argwhere([self.ui.files_listWidget.item(i).flags() & Qt.ItemIsEnabled
+                                          for i in range(self.ui.files_listWidget.count())],
+                                         )
+            keys_to_write = [self.ui.files_listWidget.item(i).text() for i in index_to_write]
+        else:
+            keys_to_write = None
+
         self.io_write_worker.configure_writer(self.io_reader_worker, self.io_seg_workers,
-                                              writer_draw_worker, write_dir)
+                                              writer_draw_worker, write_dir, keys_to_write=keys_to_write)
         self.io_write_worker.start()
 
 

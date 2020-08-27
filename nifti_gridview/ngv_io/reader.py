@@ -105,6 +105,16 @@ class reader(object):
         else:
             return self[self._ids[item]]
 
+    def get_item_ids(self):
+        return self._ids
+
+    def get_item_names(self):
+        return [os.path.basename(dir) for dir in self._files]
+
+    def has_key(self, key):
+        id = re.search(self.id_globber, key).group()
+        return id in self._ids
+
     def __getitem__(self, item):
         if not item in self._images:
             try:

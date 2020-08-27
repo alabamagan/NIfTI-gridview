@@ -39,6 +39,24 @@ class ngv_io_reader_wrapper(QThread):
             self.update_view_list.emit(list(self._reader._files.keys())[i])
         self.display_msg.emit("Ready.")
 
+    def get_all_file_names(self):
+        return self._reader.get_item_names()
+
+    def get_all_file_ids(self):
+        return self._reader.get_item_ids()
+
+    def has_key(self, item):
+        """
+        Check if item exist and can be getted without actually loading it.
+
+        Args:
+            item (str): Item Key.
+
+        Returns:
+            bool
+        """
+        return self._reader.has_key(item)
+
     def __getitem__(self, item):
         if not self._reader is None:
             return self._reader.__getitem__(item)
