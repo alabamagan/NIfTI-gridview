@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import cv2
-
+import gc
 from ngv_model import draw_grid_wrapper, ngv_logger
 
 class writer(object):
@@ -45,6 +45,8 @@ class writer(object):
 
             out_fnmae = os.path.join(self._outdir, key.replace('.nii', '').replace('.gz','') + extension)
             cv2.imwrite(out_fnmae, cv2.cvtColor(tmp_img, cv2.COLOR_RGB2BGR))
+            del tmp_config['segment'], tmp_config['target_im'], tmp_config, tmp_img, img
+            gc.collect()
         pass
 
     @staticmethod

@@ -79,6 +79,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self.ui.spinBox_drawrange_upper.valueChanged.connect(self._update_image_data)
         self.ui.spinBox_drawrange_lower.valueChanged.connect(self._update_image_data)
         self.ui.spinBox_padding.valueChanged.connect(self._update_image_data)
+        self.ui.doubleSpinBox_alpha.valueChanged.connect(self._update_image_data)
+        self.ui.doubleSpinBox_line_thickness.valueChanged.connect(self._update_image_data)
 
 
         # connect drawing worker
@@ -124,6 +126,9 @@ class ngv_mainwindow(QMainWindow, QWidget):
     def _toggle_slides_with_seg_only(self):
         self.ui.checkBox_userange.setChecked(not self.ui.checkBox_show_slides_with_seg.isChecked())
         self.ui.checkBox_userange.setEnabled(not self.ui.checkBox_show_slides_with_seg.isChecked())
+
+        self._update_image_data()
+        self._update_displayed_img()
 
 
 
@@ -252,7 +257,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
             'offset': self.ui.spinBox_offset.value(),
             'margins': self.ui.spinBox_padding.value(),
             'cmap': self.ui.comboBox_cmap.currentText(),
-            'thickness': 2,
+            'thickness': int(self.ui.doubleSpinBox_line_thickness.value()),
+            'alpha': self.ui.doubleSpinBox_alpha.value(),
             'seg_only': self.ui.checkBox_show_slides_with_seg.isChecked()
         }
         for s in self.io_seg_workers:

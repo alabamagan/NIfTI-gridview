@@ -98,13 +98,15 @@ def draw_grid(image, crop=None, nrow=None, offset=None, background=0, margins=1,
     return im_grid
 
 def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, background=0, margins=1, color=None,
-                      thickness=2, **kwargs):
+                      thickness=2, alpha=0.5, **kwargs):
     """
     This is the wrapper function for make_grid that supports some extra tweaking.
 
     Args:
-        seg (np.ndarray or torch.Tensor):
+        im_grid (np.ndarray):
             Input 3D image, should have a dimension of 3 with configuration Z x W x H.
+        seg (np.ndarray):
+            Input 3D segmentation, should have a dimension of 3 with configuration Z x W x H.
         crop (dict, Optional):
             If provided with key `{'center': [w, h] 'size': [sw, sh] or int }`, the image is cropped
             first before making the grid. Default to None.
@@ -119,6 +121,8 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
             Pass to `make_grid` padding option. Default to 1.
         color (iter, Optional):
             Color of the output contour.
+        alpha (float, Optional):
+            Alpha channel. Default to 0.5.
         **kwargs:
             Not suppose to have any use.
 
@@ -175,7 +179,12 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
 
     # Draw contour on image grid
     try:
-        cv2.drawContours(im_grid, contours, -1, list(color.color().getRgb()[:3]) + [128], thickness=thickness)
+        _temp = np.zeros_like(im_grid)
+        cv2.drawContours(_temp, contours, -1, list(color.color().getRgb()[:3]) + [1],
+                         thickness=thickness, lineType=cv2.LINE_AA)
+        im_grid = cv2.addWeighted(im_grid, 1, _temp, alpha, 0)
+        del _temp
+
     except Exception as e:
         print(e)
         # ngv_logger.global_log("Error during draw contours.")

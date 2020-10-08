@@ -46,6 +46,8 @@ class draw_grid_wrapper(QThread):
                     if ss is None:
                         continue
                     self._result = draw_grid_contour(self._result, ss[slices_to_show], color=ss_color, **self._config)
+            del target_im
+
         except AttributeError:
             ngv_logger.global_log("Error while loading with config {}, cannot load according to "
                                   "configuration.".format(self._config))
