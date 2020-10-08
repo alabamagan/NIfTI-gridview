@@ -393,6 +393,7 @@
     <addaction name="actionOpen_Folder"/>
     <addaction name="actionOpen_Segmentation_Folder"/>
     <addaction name="actionSave_Configuration"/>
+    <addaction name="actionExport_Current_Image"/>
     <addaction name="actionExport_Images"/>
    </widget>
    <addaction name="menuFiles"/>
@@ -422,6 +423,11 @@
   <action name="actionExport_Images">
    <property name="text">
     <string>Export Images...</string>
+   </property>
+  </action>
+  <action name="actionExport_Current_Image">
+   <property name="text">
+    <string>Export Current Image</string>
    </property>
   </action>
  </widget>

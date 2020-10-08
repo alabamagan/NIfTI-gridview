@@ -201,9 +201,12 @@ class Ui_ngv_mainwindow(object):
         self.actionSave_Configuration.setObjectName("actionSave_Configuration")
         self.actionExport_Images = QtWidgets.QAction(ngv_mainwindow)
         self.actionExport_Images.setObjectName("actionExport_Images")
+        self.actionExport_Current_Image = QtWidgets.QAction(ngv_mainwindow)
+        self.actionExport_Current_Image.setObjectName("actionExport_Current_Image")
         self.menuFiles.addAction(self.actionOpen_Folder)
         self.menuFiles.addAction(self.actionOpen_Segmentation_Folder)
         self.menuFiles.addAction(self.actionSave_Configuration)
+        self.menuFiles.addAction(self.actionExport_Current_Image)
         self.menuFiles.addAction(self.actionExport_Images)
         self.menubar.addAction(self.menuFiles.menuAction())
 
@@ -240,3 +243,4 @@ class Ui_ngv_mainwindow(object):
         self.actionOpen_Segmentation_Folder.setText(_translate("ngv_mainwindow", "Open Segmentation Folder"))
         self.actionSave_Configuration.setText(_translate("ngv_mainwindow", "Save Configuration"))
         self.actionExport_Images.setText(_translate("ngv_mainwindow", "Export Images..."))
+        self.actionExport_Current_Image.setText(_translate("ngv_mainwindow", "Export Current Image"))

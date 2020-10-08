@@ -105,8 +105,8 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
     Args:
         im_grid (np.ndarray):
             Input 3D image, should have a dimension of 3 with configuration Z x W x H.
-        seg (np.ndarray):
-            Input 3D segmentation, should have a dimension of 3 with configuration Z x W x H.
+        seg (list):
+            Input 3D segmentation list, each should have a dimension of 3 with configuration Z x W x H.
         crop (dict, Optional):
             If provided with key `{'center': [w, h] 'size': [sw, sh] or int }`, the image is cropped
             first before making the grid. Default to None.
@@ -131,59 +131,65 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
     """
     assert offset >= 0 or offset is None, "In correct offset setting!"
 
-
-    if isinstance(seg, np.ndarray):
-        seg = seg.astype('uint8')
-
-    # Offset the image by padding zeros
-    if not offset is None and offset != 0:
-        seg = seg.squeeze()
-        seg = np.pad(seg, [(0, 0), (0, 0), (offset, 0)], constant_values=0)
-
-    # Handle dimensions
-    if seg.ndim == 3:
-        seg = np.expand_dims(seg, axis=1)
-
-    # compute number of image per row if now provided
-    if nrow is None:
-        nrow = np.int(np.ceil(np.sqrt(len(seg))))
-
-
-    # Crop the image along the x, y direction, ignore z direction.
-    if not crop is None:
-        # Find center of mass for segmentation
-        seg_shape = seg.shape
-
-        center = crop['center']
-        size = crop['size']
-        lower_bound = [np.max([0, int(c - s // 2)]) for c, s in zip(center, size)]
-        upper_bound = [np.min([l + s, m]) for l, s, m in zip(lower_bound, size, seg_shape[1:])]
-
-        # Crop
-        seg = seg[:,:, lower_bound[0]:upper_bound[0], lower_bound[1]:upper_bound[1]]
-
-    if nrow is None:
-        nrow = int(np.round(np.sqrt(seg.shape[0])))
-
-    # return image as RGB with range 0 to 255
-    seg_grid = make_grid(seg, nrow=nrow, padding=margins, normalize=False, pad_value=background)
-    seg_grid = seg_grid[0].astype('uint8').copy()
-
-    # Find Contours
-    try:
-        _a, contours, _b = cv2.findContours(seg_grid, mode=cv2.RETR_EXTERNAL,
+    a_contours = []
+    for ss in seg:
+        if isinstance(ss, np.ndarray):
+            ss = ss.astype('uint8')
+    
+        # Offset the image by padding zeros
+        if not offset is None and offset != 0:
+            ss = ss.squeeze()
+            ss = np.pad(ss, [(0, 0), (0, 0), (offset, 0)], constant_values=0)
+    
+        # Handle dimensions
+        if ss.ndim == 3:
+            ss = np.expand_dims(ss, axis=1)
+    
+        # compute number of image per row if now provided
+        if nrow is None:
+            nrow = np.int(np.ceil(np.sqrt(len(ss))))
+    
+    
+        # Crop the image along the x, y direction, ignore z direction.
+        if not crop is None:
+            # Find center of mass for ssmentation
+            ss_shape = ss.shape
+    
+            center = crop['center']
+            size = crop['size']
+            lower_bound = [np.max([0, int(c - s // 2)]) for c, s in zip(center, size)]
+            upper_bound = [np.min([l + s, m]) for l, s, m in zip(lower_bound, size, ss_shape[1:])]
+    
+            # Crop
+            ss = ss[:,:, lower_bound[0]:upper_bound[0], lower_bound[1]:upper_bound[1]]
+    
+        if nrow is None:
+            nrow = int(np.round(np.sqrt(ss.shape[0])))
+    
+        # return image as RGB with range 0 to 255
+        ss_grid = make_grid(ss, nrow=nrow, padding=margins, normalize=False, pad_value=background)
+        ss_grid = ss_grid[0].astype('uint8').copy()
+    
+        # Find Contours
+        try:
+            _a, contours, _b = cv2.findContours(ss_grid, mode=cv2.RETR_EXTERNAL,
+                                                method=cv2.CHAIN_APPROX_SIMPLE)
+        except:
+            contours, _b = cv2.findContours(ss_grid, mode=cv2.RETR_EXTERNAL,
                                             method=cv2.CHAIN_APPROX_SIMPLE)
-    except:
-        contours, _b = cv2.findContours(seg_grid, mode=cv2.RETR_EXTERNAL,
-                                        method=cv2.CHAIN_APPROX_SIMPLE)
 
+        a_contours.append(contours)
     # Draw contour on image grid
     try:
-        _temp = np.zeros_like(im_grid)
-        cv2.drawContours(_temp, contours, -1, list(color.color().getRgb()[:3]) + [1],
-                         thickness=thickness, lineType=cv2.LINE_AA)
-        im_grid = cv2.addWeighted(im_grid, 1, _temp, alpha, 0)
-        del _temp
+        temp = np.zeros_like(im_grid)
+        for idx, c in enumerate(a_contours):
+            _temp = np.zeros_like(im_grid)
+            cv2.drawContours(_temp, c, -1, color[idx].color().getRgb()[:3],
+                             thickness=thickness, lineType=cv2.LINE_AA)
+            temp = cv2.addWeighted(temp, 1, _temp, 0.8, 0)
+            del _temp
+        im_grid = cv2.addWeighted(im_grid, 1, temp, alpha, 0)
+        del temp
 
     except Exception as e:
         print(e)

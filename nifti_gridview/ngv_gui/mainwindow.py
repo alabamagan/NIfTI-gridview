@@ -11,6 +11,9 @@ from ngv_model import draw_grid_wrapper, colormaps, ngv_logger
 import numpy as np
 import os
 
+from ._default_colormap import _cmap
+
+
 class ngv_mainwindow(QMainWindow, QWidget):
     def __init__(self,parent=None):
         super(ngv_mainwindow, self).__init__(parent)
@@ -29,8 +32,10 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self._image_cache = {}
 
         #TODO: Logger
-        ngv_logger.global_log("=================== NIfTI-gridview new session ===================")
-        ngv_logger.global_log("Initiating ngv...")
+        ngv_logger('./ngv.log', logger_name=__class__.__name__)
+        self._logger = ngv_logger[__class__.__name__]
+        self._logger.info("=================== NIfTI-gridview new session ===================")
+        self._logger.info("Initiating ngv...")
 
         # self.ui.files_listWidget.additem
         # Manual bar
@@ -47,12 +52,14 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         # set up UI layouts
         # self._left_panel = QStackedLayout()
-        ngv_logger.global_log("Establish UI connections...")
+        self._logger.info("Establish UI connections...")
         self.ui.actionOpen_Folder.triggered.connect(self._action_open_folder)
         self.ui.actionExport_Images.triggered.connect(self._action_export_images)
         self.ui.actionOpen_Segmentation_Folder.triggered.connect(self._action_open_segmentation_folder)
+        self.ui.actionExport_Current_Image.triggered.connect(self._action_export_image)
 
         # Set up io object
+        self._logger.info("Setting up io objecting...")
         self.draw_worker = draw_grid_wrapper(self)
         self.io_reader_worker = ngv_io_reader_wrapper(self)
         self.io_write_worker = ngv_io_writer_wrapper(self)
@@ -63,9 +70,11 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
 
         # Set up drawer
+        self._logger.info("Setting up drawer.")
         self.ui.files_listWidget.itemSelectionChanged.connect(self._update_image_data)
 
         # connect spinbox
+        self._logger.info("Connect UI.")
         self.checkbox_connectionmap = {self.ui.checkBox_userange: [self.ui.spinBox_drawrange_lower,
                                                                    self.ui.spinBox_drawrange_upper],
                                        self.ui.checkBox_autonrow: [self.ui.spinBox_nrow]}
@@ -84,6 +93,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
 
         # connect drawing worker
+        self._logger.info("Connect workers.")
         self.draw_worker.finished.connect(self._update_displayed_img)
         self.draw_worker.display_msg.connect(self._show_message)
         self._show_message(self.tr('Ready.'))
@@ -95,7 +105,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
         ######################
         # Initialize UI
         ######################
-        ngv_logger.global_log("Initialize UI layout...")
+        self._logger.info("Initialize UI layout...")
         w = self.ui.tableWidget_segmentations.width()
         for i in range(5):
             self.ui.tableWidget_segmentations.setColumnWidth(i, w / 5)
@@ -107,7 +117,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
         # Connection after UI initialized
         ##################################
         self.ui.comboBox_cmap.currentTextChanged.connect(self._update_image_data)
-        ngv_logger.global_log("Ready.")
+        self._logger.global_log("Ready.")
 
 
 
@@ -162,12 +172,16 @@ class ngv_mainwindow(QMainWindow, QWidget):
         """
         Read nii.gz and push items into list view widget.
         """
+        self._logger.info("Opening folder...")
 
         fd = QFileDialog(self)
         reader_root_dir = fd.getExistingDirectory(self, self.tr("Open"),
                                                   '/home/***REMOVED***/Source/Repos/***REMOVED***_Segmentation/***REMOVED***_Segmentation',
                                                   QFileDialog.ShowDirsOnly)
+
+        self._logger.info("Reading from {}".format(reader_root_dir))
         self.io_reader_worker.configure_reader(reader_root_dir, True)
+
         self._update_file_list_view()
 
         # Allow loading segmentations afterwards
@@ -199,7 +213,9 @@ class ngv_mainwindow(QMainWindow, QWidget):
         row_color_widget.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
 
         # TODO: Multiple color as default.
-        row_color_widget.setBackgroundColor(QColor(255, 255, 0))
+        idx = len(self.io_seg_workers) - 1
+        default_color = _cmap[idx]
+        row_color_widget.setBackgroundColor(QColor(*default_color))
 
         self.ui.tableWidget_segmentations.insertRow(self.ui.tableWidget_segmentations.rowCount())
         self.ui.tableWidget_segmentations.setItem(row_num, 0, row_color_widget)
@@ -272,12 +288,44 @@ class ngv_mainwindow(QMainWindow, QWidget):
         # self.draw_worker.run()
 
 
+    def _action_export_image(self):
+        """
+        Export images as either .png or .jpg to the destination folder using the current configuration.
+        """
+        import cv2
+        # Error check
+        if self.ui.files_listWidget.count() == 0:
+            mb = QErrorMessage(self)
+            mb.showMessage(self.tr("Please specify source image directories first!"))
+            return
+
+        write_dir = QFileDialog.getSaveFileName(self, self.tr("Write Current Image"), "",
+                                                'JPG (*.jpg);;PNG (*.png)')
+        if write_dir is None:
+            # terminate
+            self._logger.info("Cancelled write.")
+
+        self._logger.info(f"Writing to: {write_dir[0]}")
+
+        # Skip files if its not in keys-to-write if it exists
+        todraw = self.draw_worker.get_result()
+        print(todraw.shape)
+
+        try:
+            todraw = cv2.cvtColor(todraw, cv2.COLOR_RGB2BGR)
+            cv2.imwrite(write_dir[0], todraw)
+        except Exception as e:
+            self._logger.error("Encounter error during write: {}".format(e))
+            self._logger.log_traceback(e)
+
+
 
     def _action_export_images(self):
         """
         Export images as either .png or .jpg to the destination folder using the current configuration.
         """
         # Error check
+        
         if self.ui.files_listWidget.count() == 0:
             mb = QErrorMessage(self)
             mb.showMessage(self.tr("Please specify source image directories first!"))

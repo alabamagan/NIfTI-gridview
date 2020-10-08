@@ -25,6 +25,7 @@ class ngv_io_reader_wrapper(QThread):
         QThread.__init__(self, parent)
 
         self._reader = None
+        self._logger = ngv_logger[__class__.__name__]
 
     def configure_reader(self, *args, **kwargs):
         self._reader = reader(*args, **kwargs)
@@ -66,7 +67,7 @@ class ngv_io_reader_wrapper(QThread):
         for i, (key, im) in enumerate(self._reader):
             self.update_progress.emit((100 * i) // N)
             self.display_msg.emit(self.tr("Reading ") + key)
-            ngv_logger.global_log("Reading {}".format(key))
+            self._logger.info("Reading {}".format(key))
             yield key, im
 
     def run(self):
@@ -74,7 +75,8 @@ class ngv_io_reader_wrapper(QThread):
             self.read_all_targets()
         except Exception as e:
             self.display_msg.emit(self.tr("Reader encounters error..."))
-            ngv_logger.global_log("Reader encounters exception: {}".format(e), 40)
+            self._logger.error("Reader encounters exception: {}".format(e))
+            self._logger.log_traceback(e)
 
 
 class ngv_io_writer_wrapper(QThread):
@@ -97,5 +99,6 @@ class ngv_io_writer_wrapper(QThread):
         try:
             self._writer.write()
         except Exception as e:
-            ngv_logger.global_log("Writer encounter exception: {}".format(e), 40)
+            self._logger.error("Writer encounter exception: {}".format(e))
+            self._logger.log_traceback(e)
             self.display_msg.emit(self.tr("Writer encounters error: {}".format(e)))
