@@ -1,7 +1,7 @@
 import SimpleITK as sitk
 import os
 import re
-from ngv_model import ngv_logger
+from ngv_model import NGV_Logger
 
 class reader(object):
     """
@@ -124,10 +124,10 @@ class reader(object):
                     id = re.search(self.id_globber, item).group()
                     return self.get_item_by_id(id)
                 except Exception as e:
-                    ngv_logger.global_log("Cannot read item with key: {}.".format(item), 30)
+                    NGV_Logger.global_log("Cannot read item with key: {}.".format(item), 30)
                     if id is not None:
-                            ngv_logger.global_log("Cannot read item with ID: {}".format(id), 30)
-                    ngv_logger.global_log("Reader encounter exception: {}".format(e))
+                            NGV_Logger.global_log("Cannot read item with ID: {}".format(id), 30)
+                    NGV_Logger.global_log("Reader encounter exception: {}".format(e))
                     return None
         return self._images[item]
 

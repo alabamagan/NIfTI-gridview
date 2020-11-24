@@ -1,6 +1,7 @@
 from .make_grid import make_grid
 import numpy as np
 import cv2
+from ngv_model.ngv_logger import NGV_Logger
 
 colormaps = {
     'Default': None,
@@ -50,7 +51,6 @@ def draw_grid(image, crop=None, nrow=None, offset=None, background=0, margins=1,
         if not offset >= 0:
             raise ArithmeticError("Offset cannot be negative")
 
-
     # Offset the image by padding zeros
     if not offset is None:
         image = image.squeeze()
@@ -58,6 +58,7 @@ def draw_grid(image, crop=None, nrow=None, offset=None, background=0, margins=1,
 
     # Handle dimensions
     if image.ndim == 3:
+        NGV_Logger['draw_grid'].debug("Expanding dim of input.")
         image = np.expand_dims(image, axis=1)
 
     # compute number of image per row if now provided
@@ -69,23 +70,27 @@ def draw_grid(image, crop=None, nrow=None, offset=None, background=0, margins=1,
     if not crop is None:
         # Find center of mass for segmentation
         im_shape = image.shape
+        NGV_Logger['draw_grid'].debug("Get image shape: {}. ".format(im_shape))
+        NGV_Logger['draw_grid'].debug("Performing crop with parameters: {}".format(crop))
 
         center = crop['center']
         size = crop['size']
         lower_bound = [np.max([0, int(c - s // 2)]) for c, s in zip(center, size)]
-        upper_bound = [np.min([l + s, m]) for l, s, m in zip(lower_bound, size, im_shape[1:])]
+        upper_bound = [np.min([l + s, m]) for l, s, m in zip(lower_bound, size, im_shape[2:])]
 
         # Crop
         image = image[:,:, lower_bound[0]:upper_bound[0], lower_bound[1]:upper_bound[1]]
 
     if nrow is None:
         nrow = int(np.round(np.sqrt(image.shape[0])))
+        NGV_Logger['draw_grid'].debug(f"Computed nrow as: {nrow}")
 
     # return image as RGB with range 0 to 255
     im_grid = make_grid(image, nrow=nrow, padding=margins, normalize=True, pad_value=background)
     im_grid = (im_grid * 255.).transpose(1, 2, 0).astype('uint8').copy()
 
     if not (cmap is None or cmap == 'Default'):
+        NGV_Logger['draw_grid'].debug("Applying alternative colormap: {}".format[cmap])
         im_grid = cv2.applyColorMap(im_grid[:,:,0], colormaps[cmap])
 
     if im_grid.shape[2] == 1:
@@ -143,6 +148,7 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
     
         # Handle dimensions
         if ss.ndim == 3:
+            NGV_Logger['draw_grid_contour'].debug("Expanding dim of input.")
             ss = np.expand_dims(ss, axis=1)
     
         # compute number of image per row if now provided
@@ -152,29 +158,35 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
     
         # Crop the image along the x, y direction, ignore z direction.
         if not crop is None:
-            # Find center of mass for ssmentation
+            # Find center of mass for segmentation
             ss_shape = ss.shape
-    
+            NGV_Logger['draw_grid_contour'].debug("Segmentation shape: {}".format(ss_shape))
+            NGV_Logger['draw_grid_contour'].debug("Cropping with parameters: {}".format(crop))
+
             center = crop['center']
             size = crop['size']
             lower_bound = [np.max([0, int(c - s // 2)]) for c, s in zip(center, size)]
-            upper_bound = [np.min([l + s, m]) for l, s, m in zip(lower_bound, size, ss_shape[1:])]
+            upper_bound = [np.min([l + s, m]) for l, s, m in zip(lower_bound, size, ss_shape[2:])]
     
             # Crop
-            ss = ss[:,:, lower_bound[0]:upper_bound[0], lower_bound[1]:upper_bound[1]]
+            ss = ss[:, :, lower_bound[0]:upper_bound[0], lower_bound[1]:upper_bound[1]]
+            NGV_Logger['draw_grid_contour'].debug("Final grid size: {}".format(ss.shape))
     
         if nrow is None:
             nrow = int(np.round(np.sqrt(ss.shape[0])))
-    
+            NGV_Logger['draw_grid_contour'].debug(f"Computed nrow as: {nrow}")
+
         # return image as RGB with range 0 to 255
         ss_grid = make_grid(ss, nrow=nrow, padding=margins, normalize=False, pad_value=background)
         ss_grid = ss_grid[0].astype('uint8').copy()
     
         # Find Contours
         try:
+            NGV_Logger['draw_grid_contour'].debug(f"Finding contours.")
             _a, contours, _b = cv2.findContours(ss_grid, mode=cv2.RETR_EXTERNAL,
                                                 method=cv2.CHAIN_APPROX_SIMPLE)
         except:
+            NGV_Logger['draw_grid_contour'].warning(f"Find contour encounter problem. Falling back...")
             contours, _b = cv2.findContours(ss_grid, mode=cv2.RETR_EXTERNAL,
                                             method=cv2.CHAIN_APPROX_SIMPLE)
 
@@ -183,16 +195,20 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
     try:
         temp = np.zeros_like(im_grid)
         for idx, c in enumerate(a_contours):
+            NGV_Logger['draw_grid_contour'].info("Drawing contours")
             _temp = np.zeros_like(im_grid)
             cv2.drawContours(_temp, c, -1, color[idx].color().getRgb()[:3],
-                             thickness=thickness, lineType=cv2.LINE_AA)
-            temp = cv2.addWeighted(temp, 1, _temp, 0.8, 0)
+                             thickness=thickness, lineType=cv2.LINE_8)
+            # Cover up, latest on top
+            _temp_mask = _temp.sum(axis=-1) != 0
+            temp[_temp_mask] = _temp[_temp_mask]
+
+            # Merge with alpha
+            # temp = cv2.addWeighted(temp, 1, _temp, .9, 0)
             del _temp
         im_grid = cv2.addWeighted(im_grid, 1, temp, alpha, 0)
         del temp
 
     except Exception as e:
-        print(e)
-        # ngv_logger.global_log("Error during draw contours.")
-        # ngv_logger.global_log(e)
+        NGV_Logger['draw_grid_contour'].exception(e)
     return im_grid

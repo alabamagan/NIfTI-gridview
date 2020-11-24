@@ -2,7 +2,7 @@ import numpy as np
 import os
 import cv2
 import gc
-from ngv_model import draw_grid_wrapper, ngv_logger
+from ngv_model import draw_grid_wrapper, NGV_Logger
 
 class writer(object):
     def __init__(self, data_loader, seg_loaders, draw_worker, outdir, **kwargs):

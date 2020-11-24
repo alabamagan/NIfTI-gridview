@@ -1,7 +1,7 @@
 from .reader import *
 from .writer import *
 from PySide2.QtCore import QThread, Signal
-from ngv_model import ngv_logger
+from ngv_model import NGV_Logger
 
 class ngv_io_reader_wrapper(QThread):
     """
@@ -25,7 +25,7 @@ class ngv_io_reader_wrapper(QThread):
         QThread.__init__(self, parent)
 
         self._reader = None
-        self._logger = ngv_logger[__class__.__name__]
+        self._logger = NGV_Logger[__class__.__name__]
 
     def configure_reader(self, *args, **kwargs):
         self._reader = reader(*args, **kwargs)

@@ -1,6 +1,6 @@
 from PySide2.QtCore import QThread, Signal, Slot, SLOT, SIGNAL
 from .draw_grid import *
-from ngv_model.ngv_logger import ngv_logger
+from ngv_model.ngv_logger import NGV_Logger
 
 class draw_grid_wrapper(QThread):
     display_msg = Signal(str)
@@ -10,7 +10,7 @@ class draw_grid_wrapper(QThread):
 
         self._config = None
         self._result = None
-        self._logger = ngv_logger[__class__.__name__]
+        self._logger = NGV_Logger[__class__.__name__]
 
     def set_config(self, config):
         self._config = config
@@ -41,7 +41,15 @@ class draw_grid_wrapper(QThread):
 
             target_im = self._config.pop('target_im')
 
-            self._result = draw_grid(target_im[slices_to_show], **self._config)
+            # crop target im
+            display_size = [256,256]
+            self._config['crop'] = {'center':[256, 256], 'size': display_size}
+
+            try:
+                self._result = draw_grid(target_im[slices_to_show], **self._config)
+            except Exception as e:
+                self._logger.exception("Draw grid encounter error.")
+
             if 'segment' in self._config and 'segment_color' in self._config:
                 in_segs = []
                 in_colors = []
@@ -54,12 +62,12 @@ class draw_grid_wrapper(QThread):
             del target_im
 
         except AttributeError:
-            self._logger.error("Error while loading with config {}, cannot load according to "
+            self._logger.log_traceback("Error while loading with config {}, cannot load according to "
                                   "configuration.".format(self._config))
             self.display_msg.emit(self.tr("Wrong drawing configuration"))
         except Exception as e:
-            self._logger.error("Encountered unknown error: {}".format(e))
-            self._logger.log_traceback(e)
+            self._logger.log_traceback("Encountered unknown error: {}".format(e))
+            self.display_msg.emit(self.tr("Unknown error."))
 
     def get_result(self):
         return self._result

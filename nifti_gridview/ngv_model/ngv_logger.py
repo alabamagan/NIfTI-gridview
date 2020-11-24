@@ -6,7 +6,7 @@ import os
 import traceback
 import sys
 
-class ngv_logger(object):
+class NGV_Logger(object):
     global_logger = None
     all_loggers = {}
     DEBUG = logging.DEBUG
@@ -31,7 +31,7 @@ class ngv_logger(object):
             :class:`Logger` object
         """
 
-        super(ngv_logger, self).__init__()
+        super(NGV_Logger, self).__init__()
         self._log_dir = log_dir
         self._verbose = verbose
 
@@ -55,12 +55,7 @@ class ngv_logger(object):
             __class__.all_loggers[logger_name] = self
 
     def log_traceback(self, e):
-        import sys
-        import traceback as tr
-
-        cl, exc, tb = sys.exc_info()
-        self.error(tr.extract_tb(tb))
-        self.error("Original message: {}".format(e))
+        self._logger.exception(e)
 
     def log_print(self, msg, level=logging.INFO):
         self._logger.log(level, msg)
