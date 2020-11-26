@@ -71,3 +71,8 @@ class draw_grid_wrapper(QThread):
 
     def get_result(self):
         return self._result
+
+    def stop(self):
+        # collect and release allocated resources
+        del self._config, self._result
+        self.terminate()

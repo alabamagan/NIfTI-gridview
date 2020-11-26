@@ -6,7 +6,7 @@ from PySide2.QtCore import Slot, Qt
 from PySide2.QtGui import QImage, QPixmap, QColor
 from ._mainwindow import *
 from ngv_io import ngv_io_reader_wrapper, ngv_io_writer_wrapper
-from ngv_model import draw_grid_wrapper, colormaps, ngv_logger
+from ngv_model import draw_grid_wrapper, colormaps, NGV_Logger
 
 import numpy as np
 import os
@@ -32,8 +32,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self._image_cache = {}
 
         #TODO: Logger
-        ngv_logger('./ngv.log', logger_name=__class__.__name__)
-        self._logger = ngv_logger[__class__.__name__]
+        NGV_Logger('./ngv.log', logger_name=__class__.__name__)
+        self._logger = NGV_Logger[__class__.__name__]
         self._logger.info("=================== NIfTI-gridview new session ===================")
         self._logger.info("Initiating ngv...")
 
