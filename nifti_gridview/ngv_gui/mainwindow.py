@@ -357,7 +357,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
             keys_to_write = None
 
         self.io_write_worker.configure_writer(self.io_reader_worker, self.io_seg_workers,
-                                              writer_draw_worker, write_dir, keys_to_write=keys_to_write)
+                                              writer_draw_worker, write_dir, keys_to_write=keys_to_write,
+                                              high_res=self.ui.checkBox_highres.isChecked())
         self.io_write_worker.start()
 
 

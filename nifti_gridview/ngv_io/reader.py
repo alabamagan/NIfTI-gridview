@@ -1,6 +1,7 @@
 import SimpleITK as sitk
 import os
 import re
+from cachetools import cached, LRUCache
 from ngv_model import NGV_Logger
 
 class reader(object):
@@ -115,10 +116,12 @@ class reader(object):
         id = re.search(self.id_globber, key).group()
         return id in self._ids
 
+    @cached(cache=LRUCache(maxsize=10)) # cache 10 latest output
     def __getitem__(self, item):
         if not item in self._images:
             try:
-                self._images[item] = sitk.GetArrayFromImage(sitk.ReadImage(self._files[item]))
+                # TODO: This causes mem leak.
+                out = sitk.GetArrayFromImage(sitk.ReadImage(self._files[item]))
             except:
                 try:
                     id = re.search(self.id_globber, item).group()
@@ -129,7 +132,9 @@ class reader(object):
                             NGV_Logger.global_log("Cannot read item with ID: {}".format(id), 30)
                     NGV_Logger.global_log("Reader encounter exception: {}".format(e))
                     return None
-        return self._images[item]
+        else:
+            return self._images[item]
+        return out
 
     def __len__(self):
         return len(self._files)
