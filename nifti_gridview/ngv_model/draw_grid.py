@@ -54,11 +54,12 @@ def draw_grid(image, crop=None, nrow=None, offset=None, background=0, margins=1,
     # Offset the image by padding zeros
     if not offset is None:
         image = image.squeeze()
-        image = np.pad(image, [(0, 0), (0, 0), (offset, 0)], constant_values=0)
+        image = np.pad(image, [(offset, 0), (0, 0), (0, 0)], constant_values=0)
 
     # Handle dimensions
+    draw_grid_logger = NGV_Logger['draw_grid']
     if image.ndim == 3:
-        NGV_Logger['draw_grid'].debug("Expanding dim of input.")
+        draw_grid_logger.debug("Expanding dim of input.")
         image = np.expand_dims(image, axis=1)
 
     # compute number of image per row if now provided
@@ -70,8 +71,8 @@ def draw_grid(image, crop=None, nrow=None, offset=None, background=0, margins=1,
     if not crop is None:
         # Find center of mass for segmentation
         im_shape = image.shape
-        NGV_Logger['draw_grid'].debug("Get image shape: {}. ".format(im_shape))
-        NGV_Logger['draw_grid'].debug("Performing crop with parameters: {}".format(crop))
+        draw_grid_logger.debug("Get image shape: {}. ".format(im_shape))
+        draw_grid_logger.debug("Performing crop with parameters: {}".format(crop))
 
         center = crop['center']
         size = crop['size']
@@ -83,14 +84,14 @@ def draw_grid(image, crop=None, nrow=None, offset=None, background=0, margins=1,
 
     if nrow is None:
         nrow = int(np.round(np.sqrt(image.shape[0])))
-        NGV_Logger['draw_grid'].debug(f"Computed nrow as: {nrow}")
+        draw_grid_logger.debug(f"Computed nrow as: {nrow}")
 
     # return image as RGB with range 0 to 255
     im_grid = make_grid(image, nrow=nrow, padding=margins, normalize=True, pad_value=background)
     im_grid = (im_grid * 255.).transpose(1, 2, 0).astype('uint8').copy()
 
     if not (cmap is None or cmap == 'Default'):
-        NGV_Logger['draw_grid'].debug("Applying alternative colormap: {}".format[cmap])
+        draw_grid_logger.debug("Applying alternative colormap: {}".format[cmap])
         im_grid = cv2.applyColorMap(im_grid[:,:,0], colormaps[cmap])
 
     if im_grid.shape[2] == 1:
@@ -135,6 +136,7 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
         torch.Tensor
     """
     assert offset >= 0 or offset is None, "In correct offset setting!"
+    draw_grid_logger = NGV_Logger['draw_grid_contour']
 
     a_contours = []
     for ss in seg:
@@ -143,8 +145,9 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
     
         # Offset the image by padding zeros
         if not offset is None and offset != 0:
+            draw_grid_logger.debug("Offsetting: {}".format(offset))
             ss = ss.squeeze()
-            ss = np.pad(ss, [(0, 0), (0, 0), (offset, 0)], constant_values=0)
+            ss = np.pad(ss, [(offset, 0), (0, 0), (0, 0)], constant_values=0)
     
         # Handle dimensions
         if ss.ndim == 3:
@@ -160,8 +163,8 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
         if not crop is None:
             # Find center of mass for segmentation
             ss_shape = ss.shape
-            NGV_Logger['draw_grid_contour'].debug("Segmentation shape: {}".format(ss_shape))
-            NGV_Logger['draw_grid_contour'].debug("Cropping with parameters: {}".format(crop))
+            draw_grid_logger.debug("Segmentation shape: {}".format(ss_shape))
+            draw_grid_logger.debug("Cropping with parameters: {}".format(crop))
 
             center = crop['center']
             size = crop['size']
@@ -170,11 +173,11 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
     
             # Crop
             ss = ss[:, :, lower_bound[0]:upper_bound[0], lower_bound[1]:upper_bound[1]]
-            NGV_Logger['draw_grid_contour'].debug("Final grid size: {}".format(ss.shape))
+            draw_grid_logger.debug("Final grid size: {}".format(ss.shape))
     
         if nrow is None:
             nrow = int(np.round(np.sqrt(ss.shape[0])))
-            NGV_Logger['draw_grid_contour'].debug(f"Computed nrow as: {nrow}")
+            draw_grid_logger.debug(f"Computed nrow as: {nrow}")
 
         # return image as RGB with range 0 to 255
         ss_grid = make_grid(ss, nrow=nrow, padding=margins, normalize=False, pad_value=background)
@@ -182,11 +185,11 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
     
         # Find Contours
         try:
-            NGV_Logger['draw_grid_contour'].debug(f"Finding contours.")
+            draw_grid_logger.debug(f"Finding contours.")
             _a, contours, _b = cv2.findContours(ss_grid, mode=cv2.RETR_EXTERNAL,
                                                 method=cv2.CHAIN_APPROX_SIMPLE)
         except:
-            NGV_Logger['draw_grid_contour'].warning(f"Find contour encounter problem. Falling back...")
+            draw_grid_logger.warning(f"Find contour encounter problem. Falling back...")
             contours, _b = cv2.findContours(ss_grid, mode=cv2.RETR_EXTERNAL,
                                             method=cv2.CHAIN_APPROX_SIMPLE)
 
@@ -195,7 +198,7 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
     try:
         temp = np.zeros_like(im_grid)
         for idx, c in enumerate(a_contours):
-            NGV_Logger['draw_grid_contour'].info("Drawing contours")
+            draw_grid_logger.info("Drawing contours")
             _temp = np.zeros_like(im_grid)
             cv2.drawContours(_temp, c, -1, color[idx].color().getRgb()[:3],
                              thickness=thickness, lineType=cv2.LINE_8)
@@ -210,5 +213,5 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
         del temp
 
     except Exception as e:
-        NGV_Logger['draw_grid_contour'].exception(e)
+        draw_grid_logger.exception(e)
     return im_grid

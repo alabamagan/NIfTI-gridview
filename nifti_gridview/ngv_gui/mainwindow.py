@@ -251,6 +251,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
             target_im = target_im[display_lrange:display_urange + 1]
         else:
             # Resume original range if not checked
+            display_lrange = 0
+            display_urange = len(target_im) - 1
             self.ui.spinBox_drawrange_lower.blockSignals(True)
             self.ui.spinBox_drawrange_upper.blockSignals(True)
             self.ui.spinBox_drawrange_lower.setValue(0)
@@ -281,7 +283,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
             if not 'segment' in config:
                 config['segment'] = []
             seg_temp = s[active_file]
-            config['segment'].append(seg_temp)
+            config['segment'].append(seg_temp[display_lrange:display_urange + 1])
 
         self.draw_worker.set_config(config)
         self.draw_worker.start()
