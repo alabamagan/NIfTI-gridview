@@ -82,13 +82,14 @@ class NGV_Logger(object):
     def critical(self, msg):
         self.log_print_tqdm(msg, level=logging.critical())
 
-    def exception_hook(self, *args):
-        self._logger.error('Uncaught exception:', exc_info=args)
-        traceback.print_tb(args[0])
+    def exception(self, msg):
+        self._logger.exception(msg)
 
     def __class_getitem__(cls, item):
         if cls.global_logger is None:
-            raise AttributeError("Global logger was not created.")
+            cls.global_logger = NGV_Logger('./default.log')
+            cls.global_logger.info("Creating default logger because no global logger founded.")
+            return cls[item]
         elif not item in cls.all_loggers:
             cls.global_logger.log_print("Requesting logger [{}] not exist, creating...".format(
                 str(item)
