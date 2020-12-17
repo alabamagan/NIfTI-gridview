@@ -47,12 +47,13 @@ class NGV_Logger(object):
         self._logger.setLevel(level=logging.DEBUG)
 
         self.info("Loging to file at: {}".format(os.path.abspath(log_dir)))
-        sys.excepthook= self.exception_hook
 
         # First logger created is the global logger.
         if __class__.global_logger is None:
             __class__.global_logger = self
             __class__.all_loggers[logger_name] = self
+            sys.excepthook = self.exception_hook
+
 
     def log_traceback(self, e):
         self._logger.exception(e)
