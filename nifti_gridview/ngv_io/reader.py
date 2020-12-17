@@ -116,7 +116,7 @@ class reader(object):
         id = re.search(self.id_globber, key).group()
         return id in self._ids
 
-    @cached(cache=LRUCache(maxsize=10)) # cache 10 latest output
+    @cached(cache=LRUCache(maxsize=20)) # cache 10 latest output
     def __getitem__(self, item):
         if not item in self._images:
             try:
