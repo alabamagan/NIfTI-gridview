@@ -180,7 +180,7 @@ def draw_grid_contour(im_grid, seg, crop=None, nrow=None, offset=None, backgroun
             draw_grid_logger.debug(f"Computed nrow as: {nrow}")
 
         # return image as RGB with range 0 to 255
-        ss_grid = make_grid(ss, nrow=nrow, padding=margins, normalize=False, pad_value=background)
+        ss_grid = make_grid(ss, nrow=nrow, padding=margins, normalize=False, pad_value=0)
         ss_grid = ss_grid[0].astype('uint8').copy()
     
         # Find Contours
