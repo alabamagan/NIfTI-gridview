@@ -176,7 +176,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         fd = QFileDialog(self)
         reader_root_dir = fd.getExistingDirectory(self, self.tr("Open"),
-                                                  '/home/***REMOVED***/Source/Repos/***REMOVED***_Segmentation/***REMOVED***_Segmentation',
+                                                  '/home/***REMOVED***/Source/Repos/NPC_Segmentation/NPC_Segmentation',
                                                   QFileDialog.ShowDirsOnly)
 
         self._logger.info("Reading from {}".format(reader_root_dir))
@@ -193,7 +193,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
         """
         fd = QFileDialog(self)
         reader_root_dir = fd.getExistingDirectory(self, self.tr("Open"),
-                                                  '/home/***REMOVED***/Source/Repos/***REMOVED***_Segmentation/***REMOVED***_Segmentation',
+                                                  '/home/***REMOVED***/Source/Repos/NPC_Segmentation/NPC_Segmentation',
                                                   QFileDialog.ShowDirsOnly)
 
         if not os.path.isdir(reader_root_dir):

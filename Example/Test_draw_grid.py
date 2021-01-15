@@ -3,7 +3,7 @@ from ngv_io import *
 from ngv_model import draw_grid_wrapper
 
 def main():
-    rootdir = '/home/***REMOVED***/Source/Repos/***REMOVED***_Segmentation/***REMOVED***_Segmentation/44.Benign_Malignant_Cropped_Largest'
+    rootdir = '/home/***REMOVED***/Source/Repos/NPC_Segmentation/NPC_Segmentation/44.Benign_Malignant_Cropped_Largest'
     r = ngv_io_reader_wrapper(None)
     r.configure_reader(rootdir)
 

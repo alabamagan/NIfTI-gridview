@@ -9,18 +9,18 @@ target_keys = ['fs-T2W', 'ce-T1W', 'ce-fs-T1W']
 drawing_params = {
     'data_paths':{
         'img_path': {
-            'fs-T2W': 'Z:\\Shared\\2.Projects\\8.***REMOVED***_Segmentation\\0A.NIFTI_ALL\\Malignant\\T2WFS_TRA',
-            'ce-T1W': 'Z:\\Shared\\2.Projects\\8.***REMOVED***_Segmentation\\0A.NIFTI_ALL\\Malignant\\CE-T1W_TRA',
-            'ce-fs-T1W': 'Z:\\Shared\\2.Projects\\8.***REMOVED***_Segmentation\\0A.NIFTI_ALL\\Malignant\\CE-T1WFS_TRA'
+            'fs-T2W': 'Z:\\Shared\\2.Projects\\8.NPC_Segmentation\\0A.NIFTI_ALL\\Malignant\\T2WFS_TRA',
+            'ce-T1W': 'Z:\\Shared\\2.Projects\\8.NPC_Segmentation\\0A.NIFTI_ALL\\Malignant\\CE-T1W_TRA',
+            'ce-fs-T1W': 'Z:\\Shared\\2.Projects\\8.NPC_Segmentation\\0A.NIFTI_ALL\\Malignant\\CE-T1WFS_TRA'
         },
         'gt_path': {
-            'fs-T2W': 'Z:\\Shared\\2.Projects\\8.***REMOVED***_Segmentation\\0B.Segmentations\\T2WFS_TRA\\00.First',
-            'ce-T1W': 'Z:\\Shared\\2.Projects\\8.***REMOVED***_Segmentation\\0B.Segmentations\\CE-T1W_TRA\\00.First',
-            'ce-fs-T1W': 'Z:\\Shared\\2.Projects\\8.***REMOVED***_Segmentation\\0B.Segmentations\\CE-T1WFS_TRA\\00.First',
+            'fs-T2W': 'Z:\\Shared\\2.Projects\\8.NPC_Segmentation\\0B.Segmentations\\T2WFS_TRA\\00.First',
+            'ce-T1W': 'Z:\\Shared\\2.Projects\\8.NPC_Segmentation\\0B.Segmentations\\CE-T1W_TRA\\00.First',
+            'ce-fs-T1W': 'Z:\\Shared\\2.Projects\\8.NPC_Segmentation\\0B.Segmentations\\CE-T1WFS_TRA\\00.First',
         },
         'cnn_path': {
-            'fs-T2W': 'Z:\\Shared\\2.Projects\\8.***REMOVED***_Segmentation\\98.Output\\T1vT2.temp\\T2W-FS',
-            'ce-T1W': 'Z:\\Shared\\2.Projects\\8.***REMOVED***_Segmentation\\98.Output\\T1vT2.temp\\CE-T1W',
+            'fs-T2W': 'Z:\\Shared\\2.Projects\\8.NPC_Segmentation\\98.Output\\T1vT2.temp\\T2W-FS',
+            'ce-T1W': 'Z:\\Shared\\2.Projects\\8.NPC_Segmentation\\98.Output\\T1vT2.temp\\CE-T1W',
             'ce-fs-T1W': 'Z:\\Shared\\temp\\ce-fs-T1w.20201208\\Results'
         }
     },

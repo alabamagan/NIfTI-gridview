@@ -6,7 +6,7 @@ import SimpleITK as sitk
 
 if __name__ == '__main__':
     im = sitk.GetArrayFromImage(sitk.ReadImage(
-        "Z:/Shared/2.Projects/8.***REMOVED***_Segmentation/0A.NIFTI_ALL/Nyul_Normed/T2WFS_TRA/769_T2_FS_TRA.nii.gz"))
+        "Z:/Shared/2.Projects/8.NPC_Segmentation/0A.NIFTI_ALL/Nyul_Normed/T2WFS_TRA/769_T2_FS_TRA.nii.gz"))
     test = draw_grid(im, nrow=5)
     # test = make_grid(np.expand_dims(im, axis=1), normalize=True, nrow=5)
     print(test.shape)
