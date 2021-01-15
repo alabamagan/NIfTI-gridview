@@ -3,7 +3,7 @@ from ngv_io import *
 from ngv_model import draw_grid_wrapper
 
 def main():
-    rootdir = '/home/***REMOVED***/Source/Repos/NPC_Segmentation/NPC_Segmentation/44.Benign_Malignant_Cropped_Largest'
+    rootdir = '/some/dir'
     r = ngv_io_reader_wrapper(None)
     r.configure_reader(rootdir)
 
@@ -15,7 +15,7 @@ def main():
     d.set_config(c)
 
     w = ngv_io_writer_wrapper(None)
-    w.configure_writer(r, d, '/home/***REMOVED***/FTP/temp/NIfTI-gridview')
+    w.configure_writer(r, d, '/some/dir/')
     w.run()
 
 
