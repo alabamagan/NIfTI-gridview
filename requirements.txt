@@ -1,4 +1,4 @@
-numpy
-cv2
-PySide2
-qt5
+numpy >=1.19
+cv2 >=4.5.0
+PySide2 >=5.10.2
+qt5 >=7.0.0
