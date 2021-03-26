@@ -10,8 +10,11 @@ software aims to provide an easy and GUI way to do so.
 - SimpleITK
 - PyQt5
 - Pyside2
-- torchvision
-- torch 
+
+You can also chose to install from anaconda env:
+```bash
+conda env create -f NIfTi-Gridview.yml -n NIfTi-Gridview
+```
 
 ## Preview
 
