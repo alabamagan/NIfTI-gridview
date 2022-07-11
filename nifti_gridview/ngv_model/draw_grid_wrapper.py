@@ -43,8 +43,10 @@ class draw_grid_wrapper(QThread):
 
             # TODO: Make this into tunable items
             # crop target im
-            display_size = [200,200]
-            self._config['crop'] = {'center':[215, 256], 'size': display_size}
+            
+            #should be already set in mainwindow.py
+            #display_size = [200,200]
+            #self._config['crop'] = {'center':[215, 256], 'size': display_size}
 
             try:
                 self._result = draw_grid(target_im[slices_to_show], **self._config)

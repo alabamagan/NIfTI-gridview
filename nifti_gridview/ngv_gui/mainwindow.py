@@ -92,6 +92,11 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self.ui.doubleSpinBox_line_thickness.valueChanged.connect(self._update_image_data)
 
 
+        #connect horizontal sliders
+        self.ui.horizontalSlider_displaysize.valueChanged.connect(self._update_image_data)
+        self.ui.horizontalSlider_displayXpos.valueChanged.connect(self._update_image_data)
+        self.ui.horizontalSlider_displayYpos.valueChanged.connect(self._update_image_data)
+        
         # connect drawing worker
         self._logger.info("Connect workers.")
         self.draw_worker.finished.connect(self._update_displayed_img)
@@ -266,6 +271,33 @@ class ngv_mainwindow(QMainWindow, QWidget):
             nrow = int(np.sqrt(target_im.shape[0]))
         else:
             nrow = self.ui.spinBox_nrow.value()
+            
+        #set crop center position
+        #doesnt work when segmentaiton is open
+        center_pos = [215, 256]
+        
+        #slider should have a range from -200 to 200
+        center_Xpos_mod = self.ui.horizontalSlider_displayXpos.sliderPosition()
+        center_Ypos_mod = self.ui.horizontalSlider_displayYpos.sliderPosition()
+        
+        center_pos[0] += center_Xpos_mod
+        center_pos[1] += center_Ypos_mod
+            
+        #set crop display size
+        #TODO: make maximum display size based on image size
+        #(does the program track image dimensions?)
+        #image becomes dim when zoomed out
+        #doesnt work when segmentation is open
+        
+        #horizontal slider should have a range from 0 to 100
+        sizescale = self.ui.horizontalSlider_displaysize.sliderPosition()
+        #minimum display size
+        display_size = [200, 200]
+        
+        display_size[0] += int(200 * sizescale // 100)
+        display_size[1] += int(200 * sizescale // 100)
+        
+        self.ui.label_displaysize.setText(f'Display size: {display_size[0]} x {display_size[1]}')
 
         config = {
             'target_im': target_im,
@@ -277,7 +309,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
             'cmap': self.ui.comboBox_cmap.currentText(),
             'thickness': int(self.ui.doubleSpinBox_line_thickness.value()),
             'alpha': self.ui.doubleSpinBox_alpha.value(),
-            'seg_only': self.ui.checkBox_show_slides_with_seg.isChecked()
+            'seg_only': self.ui.checkBox_show_slides_with_seg.isChecked(),
+            'crop': {'center': center_pos, 'size': display_size}
         }
         for s in self.io_seg_workers:
             if not 'segment' in config:
@@ -405,8 +438,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
         w = self.ui.tableWidget_segmentations.width()
         for i in range(5):
             self.ui.tableWidget_segmentations.setColumnWidth(i, w / 5)
-
-
+            
+            
     @staticmethod
     def _np_to_QPixmap(inim):
         """Convert numpy uint8 image to QPixmap"""
