@@ -27,7 +27,7 @@ conda env create -f NIfTi-Gridview.yml -n NIfTi-Gridview
 - [x] Chache displayed data.
 - [x] Save images to file.
 - [ ] Allow specifying ID globbers with regex string.  
-- [ ] Allow tuning display window level.
+- [x] Allow tuning display window level.
 - [ ] Allow changing display ROI, including W, H and position.
 - [ ] Support multiple label classes in one label map.
 - [ ] Removing loaded labels.
