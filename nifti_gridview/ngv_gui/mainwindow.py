@@ -280,8 +280,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
         center_Xpos_mod = self.ui.horizontalSlider_displayXpos.sliderPosition()
         center_Ypos_mod = self.ui.horizontalSlider_displayYpos.sliderPosition()
         
-        center_pos[0] += center_Xpos_mod
-        center_pos[1] += center_Ypos_mod
+        center_pos[1] += center_Xpos_mod
+        center_pos[0] += center_Ypos_mod
             
         #set crop display size
         #TODO: make maximum display size based on image size
