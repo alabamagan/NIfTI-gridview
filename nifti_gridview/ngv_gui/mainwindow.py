@@ -234,7 +234,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         # Allow showing segment only images
         self.ui.checkBox_show_slides_with_seg.setEnabled(True)
-        self._update_file_list_view()
+        #self._update_file_list_view()
 
 
 
