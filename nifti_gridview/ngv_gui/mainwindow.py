@@ -234,6 +234,7 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         # Allow showing segment only images
         self.ui.checkBox_show_slides_with_seg.setEnabled(True)
+        # this line causes item folder items to deselect itself
         #self._update_file_list_view()
 
 
