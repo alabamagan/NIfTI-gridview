@@ -154,15 +154,21 @@ class ngv_mainwindow(QMainWindow, QWidget):
             self._status_bar.showMessage('Ready.')
 
 
-    def _update_file_list_view(self):
+    def _add_file_list_items(self):
         """
         Push file names keys into the list view.
         """
+        # previously part of _update_file_list_view
         self.ui.files_listWidget.clear()
         for key in self.io_reader_worker._reader._files.keys():
             self.ui.files_listWidget.addItem(key)
         self.ui.files_listWidget.sortItems()
 
+    def _update_file_list_items_seg(self):
+        """
+        Set file list item flags in order to disallow loading images that do not have corresponding segmentations
+        """
+        # previously part of _update_file_list_view
         # check if segmentation folder is loaded
         if len(self.io_seg_workers) > 0:
             # disable those with no segmentations
@@ -187,7 +193,9 @@ class ngv_mainwindow(QMainWindow, QWidget):
         self._logger.info("Reading from {}".format(reader_root_dir))
         self.io_reader_worker.configure_reader(reader_root_dir, True)
 
-        self._update_file_list_view()
+        # _update_file_list_view is split into two methods
+        self._add_file_list_items()
+        self._update_file_list_items_seg()
 
         # Allow loading segmentations afterwards
         self.ui.actionOpen_Segmentation_Folder.setEnabled(True)
@@ -234,8 +242,8 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         # Allow showing segment only images
         self.ui.checkBox_show_slides_with_seg.setEnabled(True)
-        # this line causes item folder items to deselect itself
-        #self._update_file_list_view()
+        # set file list item flags without clearing and refilling list
+        self._update_file_list_items_seg()
 
 
 
