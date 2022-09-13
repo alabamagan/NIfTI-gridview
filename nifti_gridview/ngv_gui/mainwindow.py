@@ -94,8 +94,11 @@ class ngv_mainwindow(QMainWindow, QWidget):
 
         #connect horizontal sliders
         self.ui.horizontalSlider_displaysize.valueChanged.connect(self._update_image_data)
+        self.ui.horizontalSlider_displaysize.sliderReleased.connect(self._update_image_data)
         self.ui.horizontalSlider_displayXpos.valueChanged.connect(self._update_image_data)
+        self.ui.horizontalSlider_displayXpos.sliderReleased.connect(self._update_image_data)
         self.ui.horizontalSlider_displayYpos.valueChanged.connect(self._update_image_data)
+        self.ui.horizontalSlider_displayYpos.sliderReleased.connect(self._update_image_data)
         
         # connect drawing worker
         self._logger.info("Connect workers.")
